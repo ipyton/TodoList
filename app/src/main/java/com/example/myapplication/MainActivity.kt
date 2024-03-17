@@ -1,8 +1,6 @@
 package com.example.myapplication
 
-import android.location.Location
 import android.os.Bundle
-import android.provider.ContactsContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -56,25 +54,17 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 import androidx.navigation.compose.rememberNavController
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -89,10 +79,32 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ScaffoldExample()
+                    mainStage()
+
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun mainStage() {
+    val isLoggedIn = remember {
+        mutableStateOf(false)
+    }
+
+    val userName = remember {
+        mutableStateOf("")
+    }
+    val userAvatar = remember {
+        mutableStateOf("")
+    }
+    return if (isLoggedIn.value) {
+        ScaffoldExample()
+    }
+    else{
+        AccountPage(login = isLoggedIn)
     }
 }
 
@@ -126,15 +138,33 @@ fun MyNavigator(navController: NavHostController) {
     }
 }
 
-
-
-
-
-
-
-@Preview
 @Composable
-fun FormEntry() {
+fun AccountPage(login:MutableState<Boolean>) {
+    var navigator = rememberNavController()
+    AccountNavigator(navigator, login)
+}
+
+@Composable
+fun AccountNavigator(navController: NavHostController, login:MutableState<Boolean>) {
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            FormEntry(navController, login = login)
+            }
+        composable("forget") { forgetPage(navController) }
+        composable("registration") { registrationPage(navController) }
+
+    }
+}
+
+
+
+
+
+
+
+
+@Composable
+fun FormEntry(navController: NavHostController,login:MutableState<Boolean>) {
     var name by remember { mutableStateOf ("") }
     var surname by remember { mutableStateOf ("") }
 
@@ -160,12 +190,16 @@ fun FormEntry() {
                 .padding(bottom = 8.dp)
         )
 
-        Button(onClick = {  }) {
+        Button(onClick = { navController.navigate("forget") }) {
             Text("Forgot")
         }
 
-        Button(onClick = {  }) {
+        Button(onClick = { login.value = true
+                            }) {
             Text("Login")
+        }
+        Button(onClick = { navController.navigate("registration") }) {
+            Text("Registration")
         }
     }
 }
@@ -344,16 +378,19 @@ fun AddEvents(
 
 
 @Composable
-@Preview
-fun registerPage() {
+fun registrationPage(navController: NavHostController) {
+    Text(text = "this is registration page")
+}
 
+@Composable
+fun forgetPage(navController: NavHostController) {
+    Text(text = "this is forget page")
 }
 
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun ScaffoldExample() {
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -363,7 +400,7 @@ fun ScaffoldExample() {
     val done : ComposableFun = {  Icon(Icons.Filled.CheckCircle, contentDescription = "Done")}
     val today : ComposableFun = { Icon(Icons.Rounded.Notifications, contentDescription = "today") }
     val navController = rememberNavController()
-    val icons = listOf(today, done, scheduled, location)
+    val icons = listOf(today, scheduled, done, location)
     var showEventAdder= remember {
         mutableStateOf(false)
     }
@@ -455,18 +492,3 @@ fun ScaffoldExample() {
 typealias ComposableFun = @Composable () -> Unit
 
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MyApplicationTheme {
-        Greeting("Android")
-    }
-}
