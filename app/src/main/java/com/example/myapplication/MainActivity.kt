@@ -1,5 +1,8 @@
 package com.example.myapplication
 
+import android.annotation.SuppressLint
+import android.app.TimePickerDialog
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,22 +54,31 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.Calendar
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -204,60 +218,139 @@ fun FormEntry(navController: NavHostController,login:MutableState<Boolean>) {
     }
 }
 
+
 @RequiresApi(0)
-@Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DisplayDatePicker() {
+fun DisplayDatePicker(display: MutableState<Boolean>) {
     val calendar = Calendar.getInstance()
     calendar.set(2024, 0, 1) // month (0) is January
+    val state = rememberTimePickerState()
+
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Instant.now().toEpochMilli()
     )
-    var showDatePicker by remember {
-        mutableStateOf(false)
-    }
+
     var selectedDate by remember {
         mutableStateOf(calendar.timeInMillis)
     }
 
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
 
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = {
-                    showDatePicker = false
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showDatePicker = false
-                        //selectedDateMillis!! null safety because type declared as Long? selectedDate = datePickerState.selectedDateMillis!!
-                    }) { Text(text = "OK")
+    var currentState by remember {
+        mutableStateOf("date") // date/ time selection
+    }
+
+        if (display.value) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+
+            DatePickerDialog(onDismissRequest = { display.value = false}, confirmButton = {
+                TextButton(
+                onClick = { display.value = false },
+            ) {
+                Text("Confirm")
+            } }) {
+                Row(
+                ) {
+                    TextButton(
+                        onClick = { currentState = "date" },
+                    ) {
+                        Text("date")
                     }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        showDatePicker = false
-                    }) {
-                        Text(text = "Cancel")
+                    TextButton(
+                        onClick = { currentState = "time" },
+                    ) {
+                        Text("time")
                     }
                 }
-            ) //end of dialog
-            { //still column scope
-                DatePicker(
-                    state = datePickerState
-                )
+                if (currentState == "date") {
+                    DatePicker(
+                        state = datePickerState,
+                        title = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )}
+                else {
+                    TimePicker(state = state)
+                }
             }
-        }// end of if
-        Button(
-            onClick = {
-                showDatePicker = true
-            }
-        ) {
-            Text(text = "select date and time")
+
+
+//                Dialog(onDismissRequest = { display.value= false }) {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(0.dp)
+//                        .height(600.dp)
+//                        ,
+//                    shape = RoundedCornerShape(16.dp),
+//                ) {
+//
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.Center,
+//                    ) {
+//                        TextButton(
+//                            onClick = { currentState = "date" },
+//                        ) {
+//                            Text("date")
+//                        }
+//                        TextButton(
+//                            onClick = { currentState = "time" },
+//                        ) {
+//                            Text("time")
+//                        }
+//                    }
+//                        if (currentState == "date") {
+//                            DatePicker(
+//                                state = datePickerState,
+//                                title = null,
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .align(Alignment.CenterHorizontally)
+//                            )}
+//                        else {
+//                            TimePicker(state = state)
+//                        }
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.Center,
+//                    ) {
+//                        TextButton(
+//                            onClick = { display.value = false },
+//                        ) {
+//                            Text("Dismiss")
+//                        }
+//                        TextButton(
+//                            onClick = { display.value = false },
+//                        ) {
+//                            Text("Confirm")
+//                        }
+//                    }
+//
+//
+//
+//                    }
+//                }
         }
+//        if (showDateTimePicker) {
+////
+//                    if (currentState == "date") {
+//                        DatePicker(
+//                            state = datePickerState
+//                        )}
+//                    else {
+//                        TimePicker(state = state)
+//                    }
+//        }
 
     }
+}
+
+fun onDismissRequest() {
+    TODO("Not yet implemented")
 }
 
 
@@ -310,68 +403,87 @@ fun AddEvents(
     var introduction by remember {
         mutableStateOf("")
     }
-    Dialog(onDismissRequest = {  }) {
-        // Draw a rectangle shape with rounded corners inside the dialog
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(375.dp)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Column(
+    var displayDateTimePicker = remember {
+        mutableStateOf(false)
+    }
+
+
+    if (displayDateTimePicker.value) {
+        DisplayDatePicker(displayDateTimePicker)
+
+    }
+    else {
+        Dialog(onDismissRequest = {  }) {
+            // Draw a rectangle shape with rounded corners inside the dialog
+            Card(
                 modifier = Modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .fillMaxWidth()
+                    .height(375.dp)
+                    ,
+                shape = RoundedCornerShape(16.dp),
             ) {
-                TextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("title") },
-                    singleLine = true
-                )
-                TextField(
-                    value = introduction,
-                    onValueChange = { introduction = it },
-                    label = { Text("introduction") },
-                    singleLine = true
-                )
-
-                Row(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ){
-                    Text(text = "use current location?")
-                    Checkbox(
-                        checked = true,
-                        onCheckedChange = {  }
-                    )
-                }
-
-                DisplayDatePicker()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    TextButton(
-                        onClick = { showAddEvent.value = false },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Cancel")
+                    TextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("title") },
+                        singleLine = true
+                    )
+                    TextField(
+                        value = introduction,
+                        onValueChange = { introduction = it },
+                        label = { Text("introduction") },
+                        singleLine = true
+                    )
 
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ){
+                        Text(text = "Use current location?")
+                        Checkbox(
+                            checked = true,
+                            onCheckedChange = {  }
+                        )
                     }
-                    TextButton(
-                        onClick = {  },
-                        modifier = Modifier.padding(8.dp),
+                    Button(
+                        onClick = {
+                            displayDateTimePicker.value = true
+                        }
                     ) {
-                        Text("Confirm")
+                        Text(text = "Select date and time")
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        TextButton(
+                            onClick = { showAddEvent.value = false },
+                            modifier = Modifier.padding(8.dp),
+                        ) {
+                            Text("Cancel")
+
+                        }
+                        TextButton(
+                            onClick = {  },
+                            modifier = Modifier.padding(8.dp),
+                        ) {
+                            Text("Confirm")
+                        }
                     }
                 }
             }
         }
+
+
+
     }
 }
 
