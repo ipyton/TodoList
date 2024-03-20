@@ -55,6 +55,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+//    implementation("androidx.compose.material3:material3-android:1.2.1")
     val nav_version = "2.7.7"
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
 
@@ -67,6 +68,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+
 //    implementation("androidx.compose.material3:material3-android:1.2.1")
     implementation ("androidx.navigation:navigation-fragment-ktx:$nav_version")
     implementation ("androidx.navigation:navigation-ui-ktx:$nav_version")

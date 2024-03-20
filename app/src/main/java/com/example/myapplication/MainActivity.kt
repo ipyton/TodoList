@@ -25,15 +25,22 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -63,6 +70,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -125,12 +133,28 @@ fun mainStage() {
 
 @Composable
 fun Scheduled() {
-
+    val productList = listOf(
+        1,2,3
+        // Add more items as needed
+    )
+    LazyColumn {
+        itemsIndexed(productList) {idx, count ->
+            ActivityItem()
+        }
+    }
 }
 
 @Composable
 fun Done() {
-
+    val productList = listOf(
+        1,2,3
+        // Add more items as needed
+    )
+    LazyColumn {
+        itemsIndexed(productList) {idx, count ->
+            ActivityItem()
+        }
+    }
 }
 
 @Composable
@@ -146,8 +170,8 @@ fun MyNavigator(navController: NavHostController) {
         composable("Today") {
             ActivityList()
         }
-        composable("Scheduled") { Text(text = "Scheduled") }
-        composable("Done") { Text(text = "Done") }
+        composable("Scheduled") { Scheduled() }
+        composable("Done") { Done() }
         composable("Location") { Text(text = "Location") }
     }
 }
@@ -169,11 +193,6 @@ fun AccountNavigator(navController: NavHostController, login:MutableState<Boolea
 
     }
 }
-
-
-
-
-
 
 
 
@@ -204,14 +223,16 @@ fun FormEntry(navController: NavHostController,login:MutableState<Boolean>) {
                 .padding(bottom = 8.dp)
         )
 
+        Button(onClick = { login.value = true
+        }) {
+            Text("Login")
+        }
+
         Button(onClick = { navController.navigate("forget") }) {
             Text("Forgot")
         }
 
-        Button(onClick = { login.value = true
-                            }) {
-            Text("Login")
-        }
+
         Button(onClick = { navController.navigate("registration") }) {
             Text("Registration")
         }
@@ -274,77 +295,8 @@ fun DisplayDatePicker(display: MutableState<Boolean>) {
                     TimePicker(state = state)
                 }
             }
-
-
-//                Dialog(onDismissRequest = { display.value= false }) {
-//                Card(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(0.dp)
-//                        .height(600.dp)
-//                        ,
-//                    shape = RoundedCornerShape(16.dp),
-//                ) {
-//
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.Center,
-//                    ) {
-//                        TextButton(
-//                            onClick = { currentState = "date" },
-//                        ) {
-//                            Text("date")
-//                        }
-//                        TextButton(
-//                            onClick = { currentState = "time" },
-//                        ) {
-//                            Text("time")
-//                        }
-//                    }
-//                        if (currentState == "date") {
-//                            DatePicker(
-//                                state = datePickerState,
-//                                title = null,
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .align(Alignment.CenterHorizontally)
-//                            )}
-//                        else {
-//                            TimePicker(state = state)
-//                        }
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.Center,
-//                    ) {
-//                        TextButton(
-//                            onClick = { display.value = false },
-//                        ) {
-//                            Text("Dismiss")
-//                        }
-//                        TextButton(
-//                            onClick = { display.value = false },
-//                        ) {
-//                            Text("Confirm")
-//                        }
-//                    }
-//
-//
-//
-//                    }
-//                }
         }
-//        if (showDateTimePicker) {
-////
-//                    if (currentState == "date") {
-//                        DatePicker(
-//                            state = datePickerState
-//                        )}
-//                    else {
-//                        TimePicker(state = state)
-//                    }
-//        }
+
 
     }
 }
@@ -353,12 +305,12 @@ fun onDismissRequest() {
     TODO("Not yet implemented")
 }
 
-
 @Preview
 @Composable
 fun ActivityItem() {
     // activity: Activity
     var state by remember { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(false) }
     Column {
         ListItem(
             headlineContent = { Text("Title") },
@@ -367,11 +319,42 @@ fun ActivityItem() {
             leadingContent = {
                 RadioButton(
                     selected = state,
-                    onClick = { state = true },
+                    onClick = { state = !state },
                     modifier = Modifier.semantics { contentDescription = "Localized Description" }
                 )
             },
-            trailingContent = { Icon(Icons.Filled.MoreVert, contentDescription = "change status") }
+            trailingContent = {
+                IconButton(onClick = {
+                    expanded = true
+
+                }) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "change status") }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Delete") },
+                        onClick = { /* Handle edit! */ },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Outlined.Edit,
+                                contentDescription = null
+                            )
+                        })
+                    DropdownMenuItem(
+                        text = { Text("Settings") },
+                        onClick = { /* Handle settings! */ },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Outlined.Settings,
+                                contentDescription = null
+                            )
+                        })
+
+                }
+                }
+
         )
     }
 }
@@ -407,11 +390,14 @@ fun AddEvents(
         mutableStateOf(false)
     }
 
+    var displayLocationPicker = remember {
+        mutableStateOf(false)
+    }
 
     if (displayDateTimePicker.value) {
         DisplayDatePicker(displayDateTimePicker)
-
     }
+
     else {
         Dialog(onDismissRequest = {  }) {
             // Draw a rectangle shape with rounded corners inside the dialog
@@ -445,12 +431,17 @@ fun AddEvents(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
+
                     ){
                         Text(text = "Use current location?")
                         Checkbox(
-                            checked = true,
-                            onCheckedChange = {  }
+                            checked = displayLocationPicker.value,
+                            onCheckedChange = { displayLocationPicker.value = !displayLocationPicker.value }
                         )
+
+                    }
+                    if (!displayLocationPicker.value) {
+                        TextField(value = "", onValueChange = {})
                     }
                     Button(
                         onClick = {
@@ -481,17 +472,50 @@ fun AddEvents(
                 }
             }
         }
-
-
-
     }
 }
+@Preview
+@Composable
+fun stepForRegistration() {
+    val numberStep = 4
+    var currentStep by rememberSaveable { mutableStateOf(1) }
+    val titleList= arrayListOf("Step 1","Step 2","Step 3","Step 4")
 
+    Stepper(
+        numberOfSteps = numberStep,
+        currentStep = currentStep,
+        stepDescriptionList = titleList
+    )
 
+}
+
+@Preview
+@Composable
+fun stepForResetPassword() {
+    val numberStep = 4
+    var currentStep by rememberSaveable { mutableStateOf(1) }
+    val titleList= arrayListOf("Step 1","Step 2","Step 3","Step 4")
+
+    Stepper(
+        numberOfSteps = numberStep,
+        currentStep = currentStep,
+        stepDescriptionList = titleList
+    )
+
+}
 
 @Composable
 fun registrationPage(navController: NavHostController) {
-    Text(text = "this is registration page")
+    val numberStep = 4
+    var currentStep by rememberSaveable { mutableStateOf(1) }
+    val titleList= arrayListOf("Step 1","Step 2")
+
+    Stepper(
+        numberOfSteps = numberStep,
+        currentStep = currentStep,
+        stepDescriptionList = titleList
+    )
+
 }
 
 @Composable
@@ -518,12 +542,6 @@ fun ScaffoldExample() {
     }
 
 
-//    val icons = listOf(Icon(Icons.Rounded.Notifications, contentDescription = "today"),
-//        Icon(Icons.Default.DateRange, contentDescription = "scheduled"),
-//        Icon(Icons.Filled.CheckCircle, contentDescription = "Done"),
-//        Icon(Icons.Filled.LocationOn, contentDescription = "Location"))
-
-
     var barContent by remember {
         mutableStateOf("TodoList")
     }
@@ -542,17 +560,7 @@ fun ScaffoldExample() {
             )
         },
         bottomBar = {
-//            BottomAppBar(
-//                containerColor = MaterialTheme.colorScheme.primaryContainer,
-//                contentColor = MaterialTheme.colorScheme.primary,
-//            ) {
-//                Text(
-//                    modifier = Modifier
-//                        .fillMaxWidth(),
-//                    textAlign = TextAlign.Center,
-//                    text = "Bottom app bar",
-//                )
-//            }
+
             NavigationBar {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
@@ -581,17 +589,6 @@ fun ScaffoldExample() {
                 .padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-//            Text(
-//                modifier = Modifier.padding(8.dp),
-//                text =
-//                """
-//                    This is an example of a scaffold. It uses the Scaffold composable's parameters to create a screen with a simple top app bar, bottom app bar, and floating action button.
-//
-//                    It also contains some basic inner content, such as this text.
-//
-//                    You have pressed the floating action button $presses times.
-//                """.trimIndent(),
-//            )
             if (showEventAdder.value) {
                 AddEvents(showEventAdder)
             }
