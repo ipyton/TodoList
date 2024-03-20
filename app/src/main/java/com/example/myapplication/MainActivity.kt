@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Edit
@@ -75,7 +76,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -184,6 +187,30 @@ fun Location() {
     }
 }
 
+@Composable
+fun Account(navController: NavHostController) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "welcome xxxx!",
+            modifier = Modifier.padding(36.dp),
+            textAlign = TextAlign.Center,
+            style = TextStyle(fontSize = 24.sp)
+        )
+
+        Button(
+            onClick = { navController.navigate("") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Log out")
+        }
+    }
+}
 
 
 @Composable
@@ -195,6 +222,7 @@ fun MyNavigator(navController: NavHostController) {
         composable("Scheduled") { Scheduled() }
         composable("Done") { Done() }
         composable("Location") { Location() }
+        composable("Account") { Account(navController) }
     }
 }
 
@@ -212,10 +240,8 @@ fun AccountNavigator(navController: NavHostController, login:MutableState<Boolea
             }
         composable("forget") { forgetPage(navController) }
         composable("registration") { registrationPage(navController) }
-
     }
 }
-
 
 
 @Composable
@@ -551,13 +577,14 @@ fun forgetPage(navController: NavHostController) {
 fun ScaffoldExample() {
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
-    val items = listOf("Today", "Scheduled", "Done", "Location")
+    val items = listOf("Today", "Scheduled", "Done", "Location", "Account")
+    val account : ComposableFun = { Icon(Icons.Default.Home, contentDescription = "Account") }
     val location : ComposableFun = { Icon(Icons.Filled.LocationOn, contentDescription = "Location") }
     val scheduled : ComposableFun = { Icon(Icons.Default.DateRange, contentDescription = "scheduled") }
     val done : ComposableFun = {  Icon(Icons.Filled.CheckCircle, contentDescription = "Done")}
     val today : ComposableFun = { Icon(Icons.Rounded.Notifications, contentDescription = "today") }
     val navController = rememberNavController()
-    val icons = listOf(today, scheduled, done, location)
+    val icons = listOf(today, scheduled, done, location, account)
     var showEventAdder= remember {
         mutableStateOf(false)
     }
