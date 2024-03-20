@@ -95,17 +95,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyApplicationTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    mainStage()
-
-                }
-            }
+            setContentView(R.layout.activity_main)
         }
+//        setContent {
+//            MyApplicationTheme {
+//                // A surface container using the 'background' color from the theme
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colorScheme.background
+//                ) {
+//                    mainStage()
+//                    setContentView(R.layout.activity_main)
+//                }
+//            }
+//        }
     }
 }
 
@@ -159,7 +162,6 @@ fun Done() {
 
 @Composable
 fun Location() {
-
 }
 
 
@@ -438,7 +440,6 @@ fun AddEvents(
                             checked = displayLocationPicker.value,
                             onCheckedChange = { displayLocationPicker.value = !displayLocationPicker.value }
                         )
-
                     }
                     if (!displayLocationPicker.value) {
                         TextField(value = "", onValueChange = {})
