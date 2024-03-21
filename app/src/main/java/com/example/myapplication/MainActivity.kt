@@ -85,6 +85,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 import androidx.navigation.compose.rememberNavController
+import com.example.myapplication.Activities.ActivityItem
+import com.example.myapplication.Pages.Account
+import com.example.myapplication.Pages.Done
+import com.example.myapplication.Pages.Location
+import com.example.myapplication.Pages.Login
+import com.example.myapplication.Pages.Scheduled
+import com.example.myapplication.Pages.Today
+import com.example.myapplication.Pages.forgetPage
+import com.example.myapplication.Pages.registration
+import com.example.myapplication.components.AddEvents
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 
@@ -127,7 +137,6 @@ fun mainStage() {
     val isLoggedIn = remember {
         mutableStateOf(false)
     }
-
     val userName = remember {
         mutableStateOf("")
     }
@@ -135,7 +144,7 @@ fun mainStage() {
         mutableStateOf("")
     }
     return if (isLoggedIn.value) {
-        ScaffoldExample()
+        ScaffoldExample(login = isLoggedIn)
     }
     else{
         AccountPage(login = isLoggedIn)
@@ -143,86 +152,21 @@ fun mainStage() {
 }
 
 
-@Composable
-fun Scheduled() {
-    val productList = listOf(
-        1,2,3
-        // Add more items as needed
-    )
-    LazyColumn {
-        itemsIndexed(productList) {idx, count ->
-            ActivityItem()
-        }
-    }
-}
-
-@Composable
-fun Done() {
-    val productList = listOf(
-        1,2,3
-        // Add more items as needed
-    )
-    LazyColumn {
-        itemsIndexed(productList) {idx, count ->
-            ActivityItem()
-        }
-    }
-}
-
-@Composable
-fun Location() {
-    val singapore = LatLng(1.35, 103.87)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
-    }
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState
-    ) {
-        Marker(
-            state = MarkerState(position = singapore),
-            title = "Singapore",
-            snippet = "Marker in Singapore"
-        )
-    }
-}
-
-@Composable
-fun Account(navController: NavHostController) {
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "welcome xxxx!",
-            modifier = Modifier.padding(36.dp),
-            textAlign = TextAlign.Center,
-            style = TextStyle(fontSize = 24.sp)
-        )
-
-        Button(
-            onClick = { navController.navigate("") },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Log out")
-        }
-    }
-}
 
 
 @Composable
-fun MyNavigator(navController: NavHostController) {
+fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>) {
     NavHost(navController = navController, startDestination = "today") {
+        composable("Login") {
+            AccountPage(login = login)
+        }
         composable("Today") {
-            ActivityList()
+            Today()
         }
         composable("Scheduled") { Scheduled() }
         composable("Done") { Done() }
         composable("Location") { Location() }
-        composable("Account") { Account(navController) }
+        composable("Account") { Account(navController, login=login) }
     }
 }
 
@@ -236,345 +180,18 @@ fun AccountPage(login:MutableState<Boolean>) {
 fun AccountNavigator(navController: NavHostController, login:MutableState<Boolean>) {
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
-            FormEntry(navController, login = login)
-            }
+            Login(navController, login = login)
+        }
         composable("forget") { forgetPage(navController) }
-        composable("registration") { registrationPage(navController) }
+        composable("registration") { registration(navController) }
     }
-}
-
-
-@Composable
-fun FormEntry(navController: NavHostController,login:MutableState<Boolean>) {
-    var name by remember { mutableStateOf ("") }
-    var surname by remember { mutableStateOf ("") }
-
-    Column( modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center) {
-        Text(text = "Registration Form",
-            style = MaterialTheme.typography.labelLarge)
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        )
-        OutlinedTextField(
-            value = surname,
-            onValueChange = { surname = it },
-
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        )
-
-        Button(onClick = { login.value = true
-        }) {
-            Text("Login")
-        }
-
-        Button(onClick = { navController.navigate("forget") }) {
-            Text("Forgot")
-        }
-
-
-        Button(onClick = { navController.navigate("registration") }) {
-            Text("Registration")
-        }
-    }
-}
-
-
-@RequiresApi(0)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DisplayDatePicker(display: MutableState<Boolean>) {
-    val calendar = Calendar.getInstance()
-    calendar.set(2024, 0, 1) // month (0) is January
-    val state = rememberTimePickerState()
-
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = Instant.now().toEpochMilli()
-    )
-
-    var selectedDate by remember {
-        mutableStateOf(calendar.timeInMillis)
-    }
-
-
-    var currentState by remember {
-        mutableStateOf("date") // date/ time selection
-    }
-
-        if (display.value) {
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-
-            DatePickerDialog(onDismissRequest = { display.value = false}, confirmButton = {
-                TextButton(
-                onClick = { display.value = false },
-            ) {
-                Text("Confirm")
-            } }) {
-                Row(
-                ) {
-                    TextButton(
-                        onClick = { currentState = "date" },
-                    ) {
-                        Text("date")
-                    }
-                    TextButton(
-                        onClick = { currentState = "time" },
-                    ) {
-                        Text("time")
-                    }
-                }
-                if (currentState == "date") {
-                    DatePicker(
-                        state = datePickerState,
-                        title = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                    )}
-                else {
-                    TimePicker(state = state)
-                }
-            }
-        }
-
-
-    }
-}
-
-fun onDismissRequest() {
-    TODO("Not yet implemented")
-}
-
-@Preview
-@Composable
-fun ActivityItem() {
-    // activity: Activity
-    var state by remember { mutableStateOf(true) }
-    var expanded by remember { mutableStateOf(false) }
-    Column {
-        ListItem(
-            headlineContent = { Text("Title") },
-            overlineContent = { Text("Details") },
-            supportingContent = { Text("Woodside...... 10pm") },
-            leadingContent = {
-                RadioButton(
-                    selected = state,
-                    onClick = { state = !state },
-                    modifier = Modifier.semantics { contentDescription = "Localized Description" }
-                )
-            },
-            trailingContent = {
-                IconButton(onClick = {
-                    expanded = true
-
-                }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "change status") }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = { /* Handle edit! */ },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Edit,
-                                contentDescription = null
-                            )
-                        })
-                    DropdownMenuItem(
-                        text = { Text("Settings") },
-                        onClick = { /* Handle settings! */ },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Settings,
-                                contentDescription = null
-                            )
-                        })
-
-                }
-                }
-
-        )
-    }
-}
-
-
-
-@Composable
-fun ActivityList() {
-    val productList = listOf(
-        1,2,3
-        // Add more items as needed
-    )
-    LazyColumn {
-        itemsIndexed(productList) {idx, count ->
-            ActivityItem()
-        }
-    }
-}
-
-
-
-@Composable
-fun AddEvents(
-    showAddEvent:MutableState<Boolean>
-) {
-    var title by remember {
-        mutableStateOf("")
-    }
-    var introduction by remember {
-        mutableStateOf("")
-    }
-    var displayDateTimePicker = remember {
-        mutableStateOf(false)
-    }
-
-    var displayLocationPicker = remember {
-        mutableStateOf(false)
-    }
-
-    if (displayDateTimePicker.value) {
-        DisplayDatePicker(displayDateTimePicker)
-    }
-
-    else {
-        Dialog(onDismissRequest = {  }) {
-            // Draw a rectangle shape with rounded corners inside the dialog
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(375.dp)
-                    ,
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    TextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        label = { Text("title") },
-                        singleLine = true
-                    )
-                    TextField(
-                        value = introduction,
-                        onValueChange = { introduction = it },
-                        label = { Text("introduction") },
-                        singleLine = true
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-
-                    ){
-                        Text(text = "Use current location?")
-                        Checkbox(
-                            checked = displayLocationPicker.value,
-                            onCheckedChange = { displayLocationPicker.value = !displayLocationPicker.value }
-                        )
-                    }
-                    if (!displayLocationPicker.value) {
-                        TextField(value = "", onValueChange = {})
-                    }
-                    Button(
-                        onClick = {
-                            displayDateTimePicker.value = true
-                        }
-                    ) {
-                        Text(text = "Select date and time")
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        TextButton(
-                            onClick = { showAddEvent.value = false },
-                            modifier = Modifier.padding(8.dp),
-                        ) {
-                            Text("Cancel")
-
-                        }
-                        TextButton(
-                            onClick = {  },
-                            modifier = Modifier.padding(8.dp),
-                        ) {
-                            Text("Confirm")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-@Preview
-@Composable
-fun stepForRegistration() {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(1) }
-    val titleList= arrayListOf("Step 1","Step 2","Step 3","Step 4")
-
-    Stepper(
-        numberOfSteps = numberStep,
-        currentStep = currentStep,
-        stepDescriptionList = titleList
-    )
-
-}
-
-@Preview
-@Composable
-fun stepForResetPassword() {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(1) }
-    val titleList= arrayListOf("Step 1","Step 2","Step 3","Step 4")
-
-    Stepper(
-        numberOfSteps = numberStep,
-        currentStep = currentStep,
-        stepDescriptionList = titleList
-    )
-
-}
-
-@Composable
-fun registrationPage(navController: NavHostController) {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(1) }
-    val titleList= arrayListOf("Step 1","Step 2")
-
-    Stepper(
-        numberOfSteps = numberStep,
-        currentStep = currentStep,
-        stepDescriptionList = titleList
-    )
-
-}
-
-@Composable
-fun forgetPage(navController: NavHostController) {
-    Text(text = "this is forget page")
 }
 
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScaffoldExample() {
+fun ScaffoldExample(login:MutableState<Boolean>) {
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Today", "Scheduled", "Done", "Location", "Account")
@@ -640,8 +257,7 @@ fun ScaffoldExample() {
             if (showEventAdder.value) {
                 AddEvents(showEventAdder)
             }
-
-            MyNavigator(navController = navController)
+            MyNavigator(navController = navController, login = login)
         }
     }
 }
