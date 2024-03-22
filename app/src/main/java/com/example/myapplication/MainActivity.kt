@@ -182,7 +182,7 @@ fun AccountNavigator(navController: NavHostController, login:MutableState<Boolea
         composable("login") {
             Login(navController, login = login)
         }
-        composable("forget") { forgetPage(navController) }
+        composable("forget") { forgetPage(navController, login) }
         composable("registration") { registrationPage(navController, login) }
     }
 }
