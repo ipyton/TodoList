@@ -13,6 +13,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,12 +26,17 @@ import androidx.compose.ui.tooling.preview.Preview
 
 
 
-@Preview
+//@Preview
 @Composable
-fun ActivityItem() {
+fun ActivityItem(isVisible: MutableState<Boolean>) {
     // activity: Activity
-    var state by remember { mutableStateOf(true) }
+    var state by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state) {
+        isVisible.value = state
+    }
+
     Column {
         ListItem(
             headlineContent = { Text("Title") },

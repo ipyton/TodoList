@@ -20,14 +20,14 @@ import androidx.navigation.NavHostController
 import com.example.myapplication.Activities.ActivityItem
 
 @Composable
-fun Today() {
+fun Today(isVisible: MutableState<Boolean>) {
     val productList = listOf(
         1,2,3
         // Add more items as needed
     )
     LazyColumn {
         itemsIndexed(productList) {idx, count ->
-            ActivityItem()
+            ActivityItem(isVisible = isVisible)
         }
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
@@ -143,8 +144,13 @@ fun mainStage() {
     val userAvatar = remember {
         mutableStateOf("")
     }
+
+    val visible = remember {
+        mutableStateOf(false)
+    }
+
     return if (isLoggedIn.value) {
-        ScaffoldExample(login = isLoggedIn)
+        ScaffoldExample(login = isLoggedIn, isVisible = visible)
     }
     else{
         AccountPage(login = isLoggedIn)
@@ -155,16 +161,16 @@ fun mainStage() {
 
 
 @Composable
-fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>) {
+fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>,isVisible: MutableState<Boolean>) {
     NavHost(navController = navController, startDestination = "today") {
         composable("Login") {
             AccountPage(login = login)
         }
         composable("Today") {
-            Today()
+            Today(isVisible = isVisible)
         }
-        composable("Scheduled") { Scheduled() }
-        composable("Done") { Done() }
+        composable("Scheduled") { Scheduled(isVisible = isVisible) }
+        composable("Done") { Done(isVisible = isVisible) }
         composable("Location") { Location() }
         composable("Account") { Account(navController, login=login) }
     }
@@ -191,7 +197,7 @@ fun AccountNavigator(navController: NavHostController, login:MutableState<Boolea
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScaffoldExample(login:MutableState<Boolean>) {
+fun ScaffoldExample(login:MutableState<Boolean>, isVisible: MutableState<Boolean>) {
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Today", "Scheduled", "Done", "Location", "Account")
@@ -221,7 +227,25 @@ fun ScaffoldExample(login:MutableState<Boolean>) {
                 ),
                 title = {
                     Text(items[selectedItem])
+                },
+                actions = {
+                    if(isVisible.value) {
+                        if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
+                            IconButton(onClick = { /*  */ }) {
+                                Icon(Icons.Filled.CheckCircle, contentDescription = "finish")
+                            }
+                        }
+                        if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled"
+                            || items[selectedItem] == "Done") {
+                            IconButton(onClick = { /*  */ }) {
+                                Icon(Icons.Filled.Delete, contentDescription = "delete")
+                            }
+
+                        }
+
+                    }
                 }
+
             )
         },
         bottomBar = {
@@ -257,7 +281,7 @@ fun ScaffoldExample(login:MutableState<Boolean>) {
             if (showEventAdder.value) {
                 AddEvents(showEventAdder)
             }
-            MyNavigator(navController = navController, login = login)
+            MyNavigator(navController = navController, login = login, isVisible = isVisible)
         }
     }
 }
