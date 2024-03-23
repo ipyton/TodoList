@@ -93,7 +93,7 @@ import com.example.myapplication.Pages.Login
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
 import com.example.myapplication.Pages.forgetPage
-import com.example.myapplication.Pages.registration
+import com.example.myapplication.Pages.registrationPage
 import com.example.myapplication.components.AddEvents
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -182,8 +182,8 @@ fun AccountNavigator(navController: NavHostController, login:MutableState<Boolea
         composable("login") {
             Login(navController, login = login)
         }
-        composable("forget") { forgetPage(navController) }
-        composable("registration") { registration(navController) }
+        composable("forget") { forgetPage(navController, login) }
+        composable("registration") { registrationPage(navController, login) }
     }
 }
 
