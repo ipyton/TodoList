@@ -91,12 +91,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.Activities.ActivityItem
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
+import com.example.myapplication.Pages.forgetPage
 import com.example.myapplication.Pages.Location
 import com.example.myapplication.Pages.Login
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
 import com.example.myapplication.Pages.forgetPage
 import com.example.myapplication.Pages.registrationPage
+import com.example.myapplication.Pages.stepThree
+import com.example.myapplication.Pages.stepTwo
 import com.example.myapplication.components.AddEvents
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -215,7 +218,10 @@ fun AccountNavigator(navController: NavHostController, login:MutableState<Boolea
         composable("login") {
             Login(navController, login = login)
         }
-        composable("forget") { forgetPage(navController, login) }
+        //composable("forget") { forgetPage(navController) }
+        composable("forget") { forgetPage(navController) }
+        composable("StepTwo") { stepTwo(navController)}
+        composable("stepThree") { stepThree(navController, login)}
         composable("registration") { registrationPage(navController, login) }
     }
 }
