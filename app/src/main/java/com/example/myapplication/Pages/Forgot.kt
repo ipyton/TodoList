@@ -24,20 +24,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.myapplication.Stepper
+import kotlin.math.log
 
 @Composable
-fun forgetPage(navController: NavHostController, login: MutableState<Boolean>)
+fun forgetPage(navController: NavHostController)
 {
-    val numberStep = 4
+    val numberStep = 3
     var currentStep by rememberSaveable { mutableStateOf(1) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
+    val titleList= arrayListOf("Step 1","Step 2", "Step 3")
     var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var checkCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -54,6 +54,8 @@ fun forgetPage(navController: NavHostController, login: MutableState<Boolean>)
             currentStep = currentStep,
             stepDescriptionList = titleList,)
 
+
+
         Spacer(modifier = Modifier.height(16.dp))
 
         TextField(value = username,
@@ -63,19 +65,7 @@ fun forgetPage(navController: NavHostController, login: MutableState<Boolean>)
                 .fillMaxWidth()
                 .padding(8.dp))
 
-        TextField(value = password,
-            onValueChange = { password = it},
-            label = {Text(text = "Enter new Password")},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp))
 
-        TextField(value = confirmPassword,
-            onValueChange = {confirmPassword = it},
-            label = { Text(text = "Confirm Password")},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp))
 
         Row(modifier = Modifier
             .fillMaxWidth()
@@ -102,7 +92,7 @@ fun forgetPage(navController: NavHostController, login: MutableState<Boolean>)
                     }
             )
         }
-        Button(onClick = { navController.navigate("login") },
+        Button(onClick = { navController.navigate("stepTwo") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -112,3 +102,86 @@ fun forgetPage(navController: NavHostController, login: MutableState<Boolean>)
         }
     }
 }
+
+@Composable
+fun stepTwo(navController: NavHostController)
+{
+    val numberStep = 3
+    var currentStep by rememberSaveable { mutableStateOf(2) }
+    val titleList= arrayListOf("Step 1","Step 2", "Step 3")
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text (text = "Reset Password page",
+            style = TextStyle(fontSize = 24.sp,
+                fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(16.dp))
+
+        Stepper(numberOfSteps = numberStep,
+            currentStep = currentStep,
+            stepDescriptionList = titleList,)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextField(
+            value = newPassword,
+            onValueChange = { newPassword = it },
+            label = { Text(text = "New Password") },
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
+        )
+
+        TextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text(text = "Confirm Password") },
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
+        )
+
+        Button(
+            onClick = { navController.navigate("stepThree") },
+            modifier = Modifier.fillMaxWidth().padding(8.dp).offset(y = 135.dp)
+        ) {
+            Text(text = "NEXT")
+        }
+    }
+}
+
+
+@Composable
+fun stepThree(navController: NavHostController, login: MutableState<Boolean>)
+{
+    val numberStep = 3
+    var currentStep by rememberSaveable { mutableStateOf(3) }
+    val titleList= arrayListOf("Step 1","Step 2", "Step 3")
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp))
+    {
+        Text (text = "Reset Password page",
+            style = TextStyle(fontSize = 24.sp,
+                fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(16.dp))
+
+        Stepper(numberOfSteps = numberStep,
+            currentStep = currentStep,
+            stepDescriptionList = titleList,)
+
+        Text(
+            text = "Reset Successfully",
+            style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+
+        Button(
+            onClick = { navController.navigate("login") },
+            modifier = Modifier.fillMaxWidth().padding(8.dp).offset(y = 300.dp)
+        ) {
+            Text(text = "NEXT")
+        }
+
+    }
+}
+
+
