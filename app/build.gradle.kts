@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
@@ -55,6 +56,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.firebase:firebase-auth:22.3.1")
     //implementation("com.google.android.libraries.maps:maps:3.1.0-beta")
 //    implementation("androidx.compose.material3:material3-android:1.2.1")
     val nav_version = "2.7.7"
@@ -78,6 +80,19 @@ dependencies {
 //    implementation("com.google.android.gms:play-services-maps:21.2.0")
 //    implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation ("com.google.maps.android:maps-compose-utils:4.3.3")
+    //google credential
+//    implementation("androidx.credentials:credentials:1.3.0-alpha01")
+
+    // optional - needed for credentials support from play services, for devices running
+    // Android 13 and below.
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+
+
+    implementation ("androidx.credentials:credentials:1.2.1")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.2.1")
+    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
+
 
     // Optionally, you can include the widgets library for ScaleBar, etc.
     implementation ("com.google.maps.android:maps-compose-widgets:4.3.3")

@@ -3,6 +3,7 @@ package com.example.myapplication
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import android.content.Context
+import android.credentials.GetCredentialRequest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -81,6 +82,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -98,6 +100,8 @@ import com.example.myapplication.Pages.registrationPage
 import com.example.myapplication.components.AddEvents
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 
 
 import com.google.maps.android.compose.GoogleMap
@@ -114,9 +118,32 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
+    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(true)
+        .setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com")
+        .build()
+
+//    val request: GetCredentialRequest = Builder()
+//        .addGetCredentialOption(googleIdOption)
+//        .build()
+
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        coroutineScope.launch {
+//            try {
+//                val result = credentialManager.getCredential(
+//                    request = request,
+//                    context = activityContext,
+//                )
+//                handleSignIn(result)
+//            } catch (e: GetCredentialException) {
+//                handleFailure(e)
+//            }
+//        }
+//        GetSignInWithGoogleOption
+
 
         setContent {
             MyApplicationTheme {
@@ -249,7 +276,6 @@ fun ScaffoldExample(login:MutableState<Boolean>, isVisible: MutableState<Boolean
             )
         },
         bottomBar = {
-
             NavigationBar {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "467501865267",
+    "project_id": "todolist-3cd3d",
+    "storage_bucket": "todolist-3cd3d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467501865267:android:524d0e16563b41c9c90646",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1d8IjZqmJ6rzJP9Ud_IONxasZu_hSiLo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
