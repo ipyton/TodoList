@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">My Application</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="web_client_id">467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com</string>
 </resources>
