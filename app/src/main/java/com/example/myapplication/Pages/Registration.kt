@@ -28,9 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.myapplication.Stepper
+import com.example.myapplication.components.stepForRegistration
 
 @Composable
-fun registrationPage(navController: NavHostController, login: MutableState<Boolean>)
+fun RegistrationPageOne(navController: NavHostController, login: MutableState<Boolean>)
 {
     val numberStep = 4
     var currentStep by rememberSaveable { mutableStateOf(1) }
@@ -41,36 +42,26 @@ fun registrationPage(navController: NavHostController, login: MutableState<Boole
     var checkCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
-    Column (modifier = Modifier.fillMaxWidth().padding(16.dp))
+    Column (modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp))
     {
         Text (text = "Registration page",
             style = TextStyle(fontSize = 24.sp,
                 fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(16.dp))
 
-        Stepper(numberOfSteps = numberStep,
-            currentStep = currentStep,
-            stepDescriptionList = titleList,)
+//        Stepper(numberOfSteps = numberStep,
+//            currentStep = currentStep,
+//            stepDescriptionList = titleList,)
+
+        stepForRegistration(step = 1)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextField(value = username,
             onValueChange = { username = it },
             label = {Text(text = "Username")},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp))
-
-        TextField(value = password,
-            onValueChange = { password = it},
-            label = {Text(text = "Password")},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp))
-
-        TextField(value = confirmPassword,
-            onValueChange = {confirmPassword = it},
-            label = { Text(text = "Confirm Password")},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp))
@@ -89,18 +80,127 @@ fun registrationPage(navController: NavHostController, login: MutableState<Boole
                     .padding(end = 16.dp))
             Text(
                 text = "Click to receive code",
-                modifier = Modifier.align(Alignment.CenterVertically)
-                    .clickable { Toast.makeText(context, "Code has been send"
-                        , Toast.LENGTH_SHORT).show() }
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .clickable {
+                        Toast
+                            .makeText(
+                                context, "Code has been send", Toast.LENGTH_SHORT
+                            )
+                            .show()
+                    }
             )
         }
-        Button(onClick = { login.value = true },
+        Button(onClick = { navController.navigate("registrationTwo") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
                 .offset(y = 128.dp))
         {
             Text(text = "NEXT")
+        }
+    }
+}
+
+@Composable
+fun RegistrationPageTwo(navController: NavHostController, login: MutableState<Boolean>)
+{
+    val numberStep = 4
+    var currentStep by rememberSaveable { mutableStateOf(2) }
+    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var checkCode by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    Column (modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp))
+    {
+        Text (text = "Registration page",
+            style = TextStyle(fontSize = 24.sp,
+                fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(16.dp))
+
+//        Stepper(numberOfSteps = numberStep,
+//            currentStep = currentStep,
+//            stepDescriptionList = titleList,)
+
+
+        stepForRegistration(step = 2)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextField(value = password,
+            onValueChange = { password = it},
+            label = {Text(text = "Password")},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp))
+
+        TextField(value = confirmPassword,
+            onValueChange = {confirmPassword = it},
+            label = { Text(text = "Confirm Password")},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp))
+
+
+
+        Button(onClick = { navController.navigate("registrationThree") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .offset(y = 128.dp))
+        {
+            Text(text = "NEXT")
+        }
+    }
+}
+
+@Composable
+fun RegistrationPageThree(navController: NavHostController, login: MutableState<Boolean>)
+{
+    val numberStep = 4
+    var currentStep by rememberSaveable { mutableStateOf(3) }
+    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var checkCode by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    Column (modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp))
+    {
+        Text (text = "Registration page",
+            style = TextStyle(fontSize = 24.sp,
+                fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(16.dp))
+
+//        Stepper(numberOfSteps = numberStep,
+//            currentStep = currentStep,
+//            stepDescriptionList = titleList,)
+
+        stepForRegistration(step = 3)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+        Text (text = "Successful Registration",
+            style = TextStyle(fontSize = 24.sp,
+                fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(16.dp))
+
+        Button(onClick = { navController.navigate("login") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .offset(y = 128.dp))
+        {
+            Text(text = "RETURN")
         }
     }
 }

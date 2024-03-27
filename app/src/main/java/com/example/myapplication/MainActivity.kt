@@ -50,14 +50,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
-import com.example.myapplication.Pages.forgetPage
+import com.example.myapplication.Pages.ForgetPageOne
+import com.example.myapplication.Pages.ForgetPageThree
+import com.example.myapplication.Pages.ForgetPageTwo
+
 import com.example.myapplication.Pages.Location
 import com.example.myapplication.Pages.Login
+import com.example.myapplication.Pages.RegistrationPageOne
+import com.example.myapplication.Pages.RegistrationPageThree
+import com.example.myapplication.Pages.RegistrationPageTwo
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
-import com.example.myapplication.Pages.registrationPage
-import com.example.myapplication.Pages.stepThree
-import com.example.myapplication.Pages.stepTwo
+
 import com.example.myapplication.components.AddEvents
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.android.gms.auth.api.identity.Identity
@@ -192,10 +196,15 @@ fun AccountNavigator(
             Login(navController, login, googleAuthUiClient )
         }
         //composable("forget") { forgetPage(navController) }
-        composable("forget") { forgetPage(navController) }
-        composable("StepTwo") { stepTwo(navController)}
-        composable("stepThree") { stepThree(navController, login)}
-        composable("registration") { registrationPage(navController, login) }
+        composable("forgetOne") { ForgetPageOne(navController, login) }
+        composable("forgetTwo") { ForgetPageTwo(navController, login) }
+        composable("forgetThree") { ForgetPageThree(navController, login) }
+        composable("registrationOne") { RegistrationPageOne(navController, login) }
+        composable("registrationTwo") { RegistrationPageTwo(navController, login) }
+        composable("registrationThree") { RegistrationPageThree(navController, login) }
+
+
+
     }
 }
 

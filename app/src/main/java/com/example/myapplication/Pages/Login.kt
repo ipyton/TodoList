@@ -64,7 +64,7 @@ fun Login(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text("User Email") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
@@ -74,8 +74,7 @@ fun Login(
             OutlinedTextField(
                 value = surname,
                 onValueChange = { surname = it },
-
-
+                label = { Text("Password") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
@@ -96,19 +95,7 @@ fun Login(
         }
         }
         Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-//            val launcher = rememberLauncherForActivityResult(
-//                contract = ActivityResultContracts.StartIntentSenderForResult(),
-//                onResult = { result ->
-//                    if(result.resultCode == RESULT_OK) {
-//                        lifecycleScope.launch {
-//                            val signInResult = googleAuthUiClient.signInWithIntent(
-//                                intent = result.data ?: return@launch
-//                            )
-//                            viewModel.onSignInResult(signInResult)
-//                        }
-//                    }
-//                }
-//            )
+
             val launcher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.StartIntentSenderForResult(),
                 onResult = { result ->
