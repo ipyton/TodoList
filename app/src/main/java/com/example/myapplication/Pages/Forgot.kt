@@ -33,12 +33,7 @@ import com.example.myapplication.components.stepForResetPassword
 @Composable
 fun ForgetPageOne(navController: NavHostController, login: MutableState<Boolean>)
 {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(1) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
     var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var checkCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -51,9 +46,6 @@ fun ForgetPageOne(navController: NavHostController, login: MutableState<Boolean>
                 fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(16.dp))
 
-//        Stepper(numberOfSteps = numberStep,
-//            currentStep = currentStep,
-//            stepDescriptionList = titleList,)
         stepForResetPassword(step = 1)
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -104,14 +96,8 @@ fun ForgetPageOne(navController: NavHostController, login: MutableState<Boolean>
 @Composable
 fun ForgetPageTwo(navController: NavHostController, login: MutableState<Boolean>)
 {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(2) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var checkCode by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
     Column (modifier = Modifier
         .fillMaxWidth()
@@ -122,9 +108,6 @@ fun ForgetPageTwo(navController: NavHostController, login: MutableState<Boolean>
                 fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(16.dp))
 
-//        Stepper(numberOfSteps = numberStep,
-//            currentStep = currentStep,
-//            stepDescriptionList = titleList,)
         stepForResetPassword(step = 2)
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -157,15 +140,6 @@ fun ForgetPageTwo(navController: NavHostController, login: MutableState<Boolean>
 @Composable
 fun ForgetPageThree(navController: NavHostController, login: MutableState<Boolean>)
 {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(3) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var checkCode by remember { mutableStateOf("") }
-    val context = LocalContext.current
-
     Column (modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp))
@@ -174,10 +148,6 @@ fun ForgetPageThree(navController: NavHostController, login: MutableState<Boolea
             style = TextStyle(fontSize = 24.sp,
                 fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(16.dp))
-
-//        Stepper(numberOfSteps = numberStep,
-//            currentStep = currentStep,
-//            stepDescriptionList = titleList,)
 
         stepForResetPassword(step = 3)
 

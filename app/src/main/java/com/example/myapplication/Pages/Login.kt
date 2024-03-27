@@ -84,12 +84,12 @@ fun Login(
             }) {
                 Text("Login")
             }
-            Button(onClick = { navController.navigate("forget") }) {
-                Text("Forgot")
+            Button(onClick = { navController.navigate("forgetOne") }) {
+                Text("Forget")
             }
         }
         Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-            Button(onClick = { navController.navigate("registration")
+            Button(onClick = { navController.navigate("registrationOne")
                 Log.d("MainActivity","world")}) {
             Text("Registration")
         }

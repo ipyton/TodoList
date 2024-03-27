@@ -79,7 +79,7 @@ dependencies {
     implementation ("androidx.navigation:navigation-ui-ktx:$nav_version")
     implementation ("androidx.navigation:navigation-compose:$nav_version")
 //    implementation("com.google.android.gms:play-services-maps:21.2.0")
-//    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation ("com.google.maps.android:maps-compose-utils:4.3.3")
     //google credential
 //    implementation("androidx.credentials:credentials:1.3.0-alpha01")

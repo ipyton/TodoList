@@ -33,12 +33,7 @@ import com.example.myapplication.components.stepForRegistration
 @Composable
 fun RegistrationPageOne(navController: NavHostController, login: MutableState<Boolean>)
 {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(1) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
     var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var checkCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -105,14 +100,8 @@ fun RegistrationPageOne(navController: NavHostController, login: MutableState<Bo
 @Composable
 fun RegistrationPageTwo(navController: NavHostController, login: MutableState<Boolean>)
 {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(2) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var checkCode by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
     Column (modifier = Modifier
         .fillMaxWidth()
@@ -122,10 +111,6 @@ fun RegistrationPageTwo(navController: NavHostController, login: MutableState<Bo
             style = TextStyle(fontSize = 24.sp,
                 fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(16.dp))
-
-//        Stepper(numberOfSteps = numberStep,
-//            currentStep = currentStep,
-//            stepDescriptionList = titleList,)
 
 
         stepForRegistration(step = 2)
@@ -146,8 +131,6 @@ fun RegistrationPageTwo(navController: NavHostController, login: MutableState<Bo
                 .fillMaxWidth()
                 .padding(8.dp))
 
-
-
         Button(onClick = { navController.navigate("registrationThree") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -162,15 +145,6 @@ fun RegistrationPageTwo(navController: NavHostController, login: MutableState<Bo
 @Composable
 fun RegistrationPageThree(navController: NavHostController, login: MutableState<Boolean>)
 {
-    val numberStep = 4
-    var currentStep by rememberSaveable { mutableStateOf(3) }
-    val titleList= arrayListOf("Step 1","Step 2", "Step 3", "Step 4")
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var checkCode by remember { mutableStateOf("") }
-    val context = LocalContext.current
-
     Column (modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp))
