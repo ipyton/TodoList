@@ -83,13 +83,14 @@ fun AddEvents(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
-
                         ){
-                        Text(text = "Use current location?")
-                        Checkbox(
-                            checked = displayLocationPicker.value,
-                            onCheckedChange = { displayLocationPicker.value = !displayLocationPicker.value }
-                        )
+
+                            Text(modifier = Modifier.padding(12.dp),text = "Use current location?")
+                            Checkbox(
+                                checked = displayLocationPicker.value,
+                                onCheckedChange = { displayLocationPicker.value = !displayLocationPicker.value }
+                            )
+
                     }
                     if (!displayLocationPicker.value) {
                         TextField(value = "", onValueChange = {})

@@ -1,12 +1,16 @@
 package com.example.myapplication.components
 
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -20,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.util.Calendar
 
@@ -55,29 +60,47 @@ fun DateAndTimePicker(display: MutableState<Boolean>) {
                     Text("Confirm")
                 } }) {
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally).padding(start = 100.dp)
                 ) {
-                    TextButton(
-                        onClick = { currentState = "date" },
-                    ) {
-                        Text("date")
+                    if (currentState == "date") {
+                        Button(onClick = { currentState = "date" },) {
+                            Text("date")
+                        }
+                        FilledTonalButton(
+                            onClick = { currentState = "time" },
+                        ) {
+                            Text("time")
+                        }
                     }
-                    TextButton(
-                        onClick = { currentState = "time" },
-                    ) {
-                        Text("time")
+                    else if (currentState == "time") {
+                        FilledTonalButton(
+                            onClick = { currentState = "date" },
+                        ) {
+                            Text("date")
+                        }
+                        Button(
+                            onClick = { currentState = "time" },
+                        ) {
+                            Text("time")
+                        }
+
                     }
                 }
                 if (currentState == "date") {
-                    DatePicker(
-                        state = datePickerState,
-                        title = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                    )
+                        DatePicker(
+                            state = datePickerState,
+                            title = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                        )
                 }
                 else {
-                    TimePicker(state = state)
+                    TimePicker(state = state,modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally))
                 }
             }
         }

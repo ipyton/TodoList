@@ -52,28 +52,12 @@ fun Login(
         mutableStateOf(false)
     }
     var coroutineScope = rememberCoroutineScope()
-//    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-//        .setFilterByAuthorizedAccounts(true)
-//        .setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com")
-//        .build()
-//
-//    val request: androidx.credentials.GetCredentialRequest = androidx.credentials.GetCredentialRequest.Builder()
-//        .setCredentialOptions(listOf(googleIdOption))
-//        .build()
-//    if (selectorOpened.value) {
-//        LaunchedEffect(Unit){
-//            googleAuthUiClient.signIn()
-//
-//
-//        }
-//    }
-
 
 
     Column( modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,) {
         Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-            Text(text = "Registration Form",
+            Text(text = "Login",
                 style = MaterialTheme.typography.labelLarge)
         }
         Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
