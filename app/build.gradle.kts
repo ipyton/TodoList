@@ -99,6 +99,8 @@ dependencies {
     implementation ("com.google.maps.android:maps-compose-widgets:4.3.3")
     //implementation("com.android.volley:volley:1.1.0")
     implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.firebase:firebase-firestore")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
