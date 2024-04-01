@@ -2,6 +2,7 @@ package com.example.myapplication.Pages
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,7 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -41,6 +46,13 @@ fun RegistrationPageOne(navController: NavHostController, login: MutableState<Bo
         .fillMaxWidth()
         .padding(16.dp))
     {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start)
+        {
+            IconButton(onClick = { navController.navigate("login") }, modifier = Modifier.padding(8.dp))
+            {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+        }
         Text (text = "Registration page",
             style = TextStyle(fontSize = 24.sp,
                 fontWeight = FontWeight.Bold),
@@ -107,6 +119,13 @@ fun RegistrationPageTwo(navController: NavHostController, login: MutableState<Bo
         .fillMaxWidth()
         .padding(16.dp))
     {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start)
+        {
+            IconButton(onClick = { navController.navigate("registrationOne") }, modifier = Modifier.padding(8.dp))
+            {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+        }
         Text (text = "Registration page",
             style = TextStyle(fontSize = 24.sp,
                 fontWeight = FontWeight.Bold),
