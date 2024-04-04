@@ -1,6 +1,8 @@
 package com.example.myapplication.components
 
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,10 +10,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DockedSearchBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -20,13 +30,24 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.myapplication.ApiClient
+import com.example.myapplication.entities.BusinessEntity
+import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
+import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.net.URLEncoder
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(64)
 @Composable
 fun AddEvents(
@@ -46,9 +67,27 @@ fun AddEvents(
         mutableStateOf(false)
     }
 
+    var searchLocation by remember {
+        mutableStateOf("")
+
+    }
+
+    var activeSuggestion by remember {
+        mutableStateOf(false)
+    }
+
+    var suggestions = remember {
+        mutableListOf<BusinessEntity>()
+
+    }
+    var coroutineScope = rememberCoroutineScope()
+
+
     if (displayDateTimePicker.value) {
         DateAndTimePicker(displayDateTimePicker)
     }
+
+
 
     else {
         Dialog(onDismissRequest = {  }) {
@@ -56,8 +95,7 @@ fun AddEvents(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(375.dp)
-                ,
+                    .height(375.dp),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Column(
@@ -93,7 +131,104 @@ fun AddEvents(
 
                     }
                     if (!displayLocationPicker.value) {
-                        TextField(value = "", onValueChange = {})
+                        Log.d("active", activeSuggestion.toString())
+                        DockedSearchBar(
+                            query = searchLocation,
+                            onQueryChange = {
+                                searchLocation = it
+
+                                if (it.isEmpty()) {
+                                    activeSuggestion = false
+                                    suggestions.clear()
+                                } else {
+                                    coroutineScope.launch {
+
+                                        Log.d("request", URLEncoder.encode(searchLocation, "UTF-8"))
+                                        ApiClient.apiService.autoCompelete(10.1.toString() + "," + 20.1, URLEncoder.encode(searchLocation, "UTF-8"), 2000, "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
+                                            Callback<ResponseBody> {
+                                                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                                    if (response.isSuccessful) {
+                                                        activeSuggestion = true
+                                                        val post = response.body()?.string()
+
+                                                        if (post != null) {
+                                                            val jsonObj = JSONObject(post)
+                                                            Log.d("location", post)
+                                                            val jsonArray =
+                                                                jsonObj.getJSONArray("results")
+                                                            for (i in 0 until jsonArray.length()) {
+                                                                val address = jsonArray.getJSONObject(i)
+                                                                var formattedAddress = address.getString("formatted_address")
+                                                                val latitude =
+                                                                    address.getJSONObject("geometry")
+                                                                        .getJSONObject("location")
+                                                                        .getDouble("lat")
+                                                                val longitude = address.getJSONObject("geometry")
+                                                                    .getJSONObject("location")
+                                                                    .getDouble("lng")
+                                                                //Log.d("details", "onResponse: " + fullName + latitude + longitude)
+                                                                suggestions.add(BusinessEntity(formattedAddress, latitude, longitude))
+                                                            }
+                                                            if (!activeSuggestion) {
+                                                                suggestions.clear()
+                                                            }
+
+
+                                                        }
+
+                                                    } else {
+                                                        Log.d("error", "response error!!!")
+                                                    }
+
+                                                }
+
+                                                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                                    // Handle failure
+                                                }
+                                            }
+                                        )
+
+
+
+                                }
+
+                            }
+},
+                            onSearch = {
+
+                            },
+                            active = activeSuggestion,
+                            onActiveChange = {
+
+                            }
+                        ) {
+                            Column(modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(
+                                    rememberScrollState()
+                                )) {
+                            for (i in 0 until  suggestions.size) {
+                                val get = suggestions.get(i)
+                                ListItem(
+                                    headlineContent = { Text(get.formattedAddress) },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Filled.Favorite,
+                                            contentDescription = "Localized description",
+                                        )
+                                    },
+                                    modifier = Modifier.clickable {
+
+                                    }
+
+                                )
+
+
+                            }
+                        }
+
+                        }
+
                     }
                     Button(
                         onClick = {
@@ -126,3 +261,4 @@ fun AddEvents(
         }
     }
 }
+

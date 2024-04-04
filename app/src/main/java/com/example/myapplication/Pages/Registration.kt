@@ -35,6 +35,8 @@ import androidx.navigation.NavHostController
 import com.example.myapplication.Stepper
 import com.example.myapplication.components.stepForRegistration
 
+
+
 @Composable
 fun RegistrationPageOne(navController: NavHostController, login: MutableState<Boolean>)
 {
@@ -180,7 +182,6 @@ fun RegistrationPageThree(navController: NavHostController, login: MutableState<
         stepForRegistration(step = 3)
 
         Spacer(modifier = Modifier.height(16.dp))
-
 
         Text (text = "Successful Registration",
             style = TextStyle(fontSize = 24.sp,

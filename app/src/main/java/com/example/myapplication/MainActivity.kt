@@ -66,6 +66,9 @@ import com.example.myapplication.components.AddEvents
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 
@@ -80,6 +83,7 @@ class MainActivity : ComponentActivity() {
         .setCredentialOptions(listOf(googleIdOption))
         .build()
 
+    val db = Firebase.firestore
 
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -87,18 +91,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val googleAuthUiClient by lazy{ GoogleAuthUIClient(context=applicationContext, Identity.getSignInClient(applicationContext)) }
 
-//        coroutineScope.launch {
-//            try {
-//                val result = credentialManager.getCredential(
-//                    request = request,
-//                    context = activityContext,
-//                )
-//                handleSignIn(result)
-//            } catch (e: GetCredentialException) {
-//                handleFailure(e)
-//            }
-//        }
-//        GetSignInWithGoogleOption
+
         setContent {
             MyApplicationTheme {
                 // A surface container using the 'background' color from the theme
@@ -124,7 +117,6 @@ class MainActivity : ComponentActivity() {
                     )
 
                     mainStage(loginState, launcher, googleAuthUiClient)
-
                 }
             }
         }
