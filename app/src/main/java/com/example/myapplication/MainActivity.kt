@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -66,7 +67,7 @@ import com.example.myapplication.components.AddEvents
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.firebase.firestore.firestore
+import com.google.android.material.internal.ContextUtils.getActivity
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -90,7 +91,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val googleAuthUiClient by lazy{ GoogleAuthUIClient(context=applicationContext, Identity.getSignInClient(applicationContext)) }
-
 
         setContent {
             MyApplicationTheme {
@@ -295,6 +295,7 @@ fun ScaffoldExample(
         }
     }
 }
+
 
 typealias ComposableFun = @Composable () -> Unit
 

@@ -1,10 +1,17 @@
 package com.example.myapplication.components
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.location.Location
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,11 +41,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityCompat
 import com.example.myapplication.ApiClient
 import com.example.myapplication.entities.BusinessEntity
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
@@ -47,12 +58,41 @@ import retrofit2.Response
 import java.net.URLEncoder
 
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(64)
 @Composable
 fun AddEvents(
     showAddEvent: MutableState<Boolean>
 ) {
+
+    val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
+        LocalContext.current
+    )
+
+    val request = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        permissions->
+        run {
+            when {
+                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                    // Precise location access granted.
+                }
+
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                    // Only approximate location access granted.
+                }
+
+                else -> {
+                    // No location access granted.
+                }
+            }
+
+        }
+    }
+
+
     var title by remember {
         mutableStateOf("")
     }
@@ -72,6 +112,14 @@ fun AddEvents(
 
     }
 
+    var latitude by remember {
+     mutableStateOf(-1.0)
+    }
+
+    var longitude by remember {
+      mutableStateOf(-1.0)
+    }
+
     var activeSuggestion by remember {
         mutableStateOf(false)
     }
@@ -82,13 +130,29 @@ fun AddEvents(
     }
     var coroutineScope = rememberCoroutineScope()
 
+    var eventPlace = remember {
+
+        mutableStateOf(BusinessEntity("",1.0,1.0,""))
+
+    }
+
+
+    fusedLocationProviderClient.lastLocation.addOnSuccessListener { location : Location? ->
+        // Got last known location. In some rare situations this can be null.
+        if (location != null) {
+            latitude = location.latitude
+            longitude = location.longitude
+            Log.d("location",""+latitude + " " + longitude)
+        } else {
+            Log.d("location", "did not get the user location")
+        }
+
+
+    }
 
     if (displayDateTimePicker.value) {
         DateAndTimePicker(displayDateTimePicker)
     }
-
-
-
     else {
         Dialog(onDismissRequest = {  }) {
             // Draw a rectangle shape with rounded corners inside the dialog
@@ -126,54 +190,74 @@ fun AddEvents(
                             Text(modifier = Modifier.padding(12.dp),text = "Use current location?")
                             Checkbox(
                                 checked = displayLocationPicker.value,
-                                onCheckedChange = { displayLocationPicker.value = !displayLocationPicker.value }
+                                onCheckedChange = {
+                                    displayLocationPicker.value = !displayLocationPicker.value
+                                    activeSuggestion = false
+                                }
                             )
 
                     }
                     if (!displayLocationPicker.value) {
-                        Log.d("active", activeSuggestion.toString())
+                        Log.d("enter", "1111")
+                        if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                            request.launch(arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION))
+
+
+                        fusedLocationProviderClient.getLastLocation()
+                        //val lat = result.latitude
+                        //val long=result.longitude
+                        //Log.d("locationcurrent", "" + lat + " " + long)
+
                         DockedSearchBar(
                             query = searchLocation,
                             onQueryChange = {
                                 searchLocation = it
-
+                                //suggestions.clear()
                                 if (it.isEmpty()) {
                                     activeSuggestion = false
-                                    suggestions.clear()
                                 } else {
+                                    if (latitude == -1.0 || longitude == -1.0) {
+                                        return@DockedSearchBar
+                                    }
                                     coroutineScope.launch {
-
                                         Log.d("request", URLEncoder.encode(searchLocation, "UTF-8"))
-                                        ApiClient.apiService.autoCompelete(10.1.toString() + "," + 20.1, URLEncoder.encode(searchLocation, "UTF-8"), 2000, "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
+                                        ApiClient.apiService.autoCompelete("$latitude,$longitude", URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
                                             Callback<ResponseBody> {
                                                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                                                     if (response.isSuccessful) {
-                                                        activeSuggestion = true
+                                                        var resultset:MutableList<BusinessEntity> = ArrayList()
                                                         val post = response.body()?.string()
-
                                                         if (post != null) {
                                                             val jsonObj = JSONObject(post)
                                                             Log.d("location", post)
                                                             val jsonArray =
-                                                                jsonObj.getJSONArray("results")
+                                                                jsonObj.getJSONArray("predictions")
                                                             for (i in 0 until jsonArray.length()) {
+                                                                if (!activeSuggestion) {
+                                                                    break
+                                                                }
                                                                 val address = jsonArray.getJSONObject(i)
-                                                                var formattedAddress = address.getString("formatted_address")
-                                                                val latitude =
-                                                                    address.getJSONObject("geometry")
-                                                                        .getJSONObject("location")
-                                                                        .getDouble("lat")
-                                                                val longitude = address.getJSONObject("geometry")
-                                                                    .getJSONObject("location")
-                                                                    .getDouble("lng")
+                                                                val formattedAddress = address.getString("description")
+                                                                val placeId = address.getString("place_id")
+
+//                                                                val latitude =
+//                                                                    address.getJSONObject("geometry")
+//                                                                        .getJSONObject("location")
+//                                                                        .getDouble("lat")
+//                                                                val longitude = address.getJSONObject("geometry")
+//                                                                    .getJSONObject("location")
+//                                                                    .getDouble("lng")
                                                                 //Log.d("details", "onResponse: " + fullName + latitude + longitude)
-                                                                suggestions.add(BusinessEntity(formattedAddress, latitude, longitude))
+                                                                resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
                                                             }
                                                             if (!activeSuggestion) {
                                                                 suggestions.clear()
                                                             }
-
-
+                                                            suggestions = resultset
+                                                            activeSuggestion = true
                                                         }
 
                                                     } else {
@@ -200,6 +284,7 @@ fun AddEvents(
                             active = activeSuggestion,
                             onActiveChange = {
 
+
                             }
                         ) {
                             Column(modifier = Modifier
@@ -207,8 +292,8 @@ fun AddEvents(
                                 .verticalScroll(
                                     rememberScrollState()
                                 )) {
-                            for (i in 0 until  suggestions.size) {
-                                val get = suggestions.get(i)
+                            suggestions.forEach { suggestion-> run {
+                                val get = suggestion
                                 ListItem(
                                     headlineContent = { Text(get.formattedAddress) },
                                     leadingContent = {
@@ -217,11 +302,61 @@ fun AddEvents(
                                             contentDescription = "Localized description",
                                         )
                                     },
-                                    modifier = Modifier.clickable {
+                                    modifier = Modifier.clickable() {
+                                        val placeId = get.locationId
+                                        searchLocation = get.formattedAddress
+                                        activeSuggestion = false
+                                        coroutineScope.launch {
+                                            val target = get
+                                            ApiClient.apiService.getDetails(
+                                                target.locationId,
+                                                "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok"
+                                            ).enqueue(object :
+                                                Callback<ResponseBody> {
+                                                override fun onResponse(
+                                                    call: Call<ResponseBody>,
+                                                    response: Response<ResponseBody>
+                                                ) {
+                                                    if (response.isSuccessful) {
+                                                        val post = response.body()?.string()
+                                                        if (post != null) {
+                                                            Log.d("search result", post)
+                                                            val jsonObj = JSONObject(post)
+                                                            target.latitude =
+                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                                    .getJSONObject("location")
+                                                                    .getDouble("lat")
+                                                            target.longitude =
+                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                                    .getJSONObject("location")
+                                                                    .getDouble("lng")
+                                                            eventPlace.value = target
+                                                        }
 
+                                                    } else {
+                                                        Log.d("error", "response error!!!")
+                                                    }
+                                                }
+
+                                                override fun onFailure(
+                                                    call: Call<ResponseBody>,
+                                                    t: Throwable
+                                                ) {
+                                                    // Handle failure
+                                                }
+                                            }
+                                            )
+
+                                        }
+
+                                        Log.d("placeId", placeId)
                                     }
 
                                 )
+
+
+                            }
+
 
 
                             }
@@ -247,7 +382,6 @@ fun AddEvents(
                             modifier = Modifier.padding(8.dp),
                         ) {
                             Text("Cancel")
-
                         }
                         TextButton(
                             onClick = {  },
