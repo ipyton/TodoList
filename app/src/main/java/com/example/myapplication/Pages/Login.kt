@@ -1,7 +1,9 @@
 package com.example.myapplication.Pages
 
 import android.app.Activity.RESULT_OK
+import android.content.ContentValues.TAG
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,13 +34,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.myapplication.R
 import com.example.myapplication.util.GoogleAuthUIClient
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
+var userEmail:String? = null
 @Composable
 fun Login(
     navController: NavHostController,
@@ -52,6 +58,7 @@ fun Login(
         mutableStateOf(false)
     }
     var coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
 
     Column( modifier = Modifier.fillMaxWidth(),
@@ -80,7 +87,28 @@ fun Login(
                     .padding(bottom = 8.dp)
             )}
         Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-            Button(onClick = { login.value = true
+            Button(onClick = {
+                Firebase.auth.signInWithEmailAndPassword(name, surname)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful)
+                        {
+                            Log.d(TAG, "signInWithEmail:success")
+                            val user = Firebase.auth.currentUser
+                            val email = user?.email
+                            userEmail = email
+                            login.value = true
+                        }
+                        else
+                        {
+                            Log.w(TAG, "signInWithEmail:failure", task.exception)
+                            Toast.makeText(
+                                context,
+                                "Password does not match username.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
+
             }) {
                 Text("Login")
             }

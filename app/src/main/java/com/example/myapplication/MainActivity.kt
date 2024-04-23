@@ -191,7 +191,7 @@ fun AccountNavigator(
         composable("forgetOne") { ForgetPageOne(navController, login) }
         composable("forgetTwo") { ForgetPageTwo(navController, login) }
         composable("forgetThree") { ForgetPageThree(navController, login) }
-        composable("registrationOne") { RegistrationPageOne(navController, login) }
+        composable("registrationOne") { RegistrationPageOne(navController) }
         composable("registrationTwo") { RegistrationPageTwo(navController, login) }
         composable("registrationThree") { RegistrationPageThree(navController, login) }
 

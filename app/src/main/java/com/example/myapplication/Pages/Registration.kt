@@ -1,5 +1,7 @@
 package com.example.myapplication.Pages
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,14 +36,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.myapplication.Stepper
 import com.example.myapplication.components.stepForRegistration
-
-
+import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.actionCodeSettings
+import com.google.firebase.auth.auth
 
 @Composable
-fun RegistrationPageOne(navController: NavHostController, login: MutableState<Boolean>)
+fun RegistrationPageOne(navController: NavHostController)
 {
     var username by remember { mutableStateOf("") }
-    var checkCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Column (modifier = Modifier
@@ -80,23 +83,45 @@ fun RegistrationPageOne(navController: NavHostController, login: MutableState<Bo
             .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically)
         {
-            TextField(
-                value = checkCode,
-                onValueChange = { checkCode = it },
-                label = { Text(text = "Check Code") },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 16.dp))
             Text(
-                text = "Click to receive code",
+                text = "Click to receive verification email",
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .clickable {
-                        Toast
-                            .makeText(
-                                context, "Code has been send", Toast.LENGTH_SHORT
-                            )
-                            .show()
+                        if (username.isNotEmpty())
+                        {
+                            val actionCodeSettings = actionCodeSettings {
+                                url = "https://todolist-3cd3d.firebaseapp.com"
+                                handleCodeInApp = true
+                                //setIOSBundleId("com.example.ios")
+                                setAndroidPackageName(
+                                    "com.example.myapplication",
+                                    true,
+                                    "12",
+                                )
+                            }
+
+                            Firebase.auth.sendSignInLinkToEmail(username, actionCodeSettings)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Log.d(TAG, "Email sent.")
+                                    }
+                                }
+
+                            Toast
+                                .makeText(
+                                    context, "Email has been sent", Toast.LENGTH_SHORT
+                                )
+                                .show()
+                        }
+                        else
+                        {
+                            Toast
+                                .makeText(
+                                    context, "E-mail can not be empty", Toast.LENGTH_SHORT
+                                )
+                                .show()
+                        }
                     }
             )
         }
@@ -198,3 +223,4 @@ fun RegistrationPageThree(navController: NavHostController, login: MutableState<
         }
     }
 }
+
