@@ -1,5 +1,6 @@
 package com.example.myapplication.components
 
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,22 +33,37 @@ import java.util.Calendar
 @RequiresApi(0)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateAndTimePicker(display: MutableState<Boolean>) {
+fun DateAndTimePicker(display: MutableState<Boolean>,
+                      onDateTimeSelected: (String, String) -> Unit) {
     val calendar = Calendar.getInstance()
     calendar.set(2024, 0, 1) // month (0) is January
-    val state = rememberTimePickerState()
-
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Instant.now().toEpochMilli()
     )
+    val timePickerState = rememberTimePickerState()
 
-    var selectedDate by remember {
-        mutableStateOf(calendar.timeInMillis)
+
+    var selectedDateString by remember {
+        mutableStateOf("")
     }
 
+    var selectedTimeString by remember {
+        mutableStateOf("")
+    }
 
     var currentState by remember {
         mutableStateOf("date") // date/ time selection
+    }
+
+    fun saveSelectedDateTime() {
+        val selectedDateMillis = datePickerState.selectedDateMillis
+        selectedDateString = selectedDateMillis?.let { Instant.ofEpochMilli(it).toString().substring(0, 10) } ?: ""
+        val hour = timePickerState.hour
+        val minute = timePickerState.minute
+        selectedTimeString = "$hour:$minute"
+        onDateTimeSelected(selectedDateString, selectedTimeString)
+        Log.d("SelectedDateTime", "Selected Date: $selectedDateString")
+        Log.d("SelectedDateTime", "Selected Time: $selectedTimeString")
     }
 
     if (display.value) {
@@ -55,7 +71,9 @@ fun DateAndTimePicker(display: MutableState<Boolean>) {
 
             DatePickerDialog(onDismissRequest = { display.value = false}, confirmButton = {
                 TextButton(
-                    onClick = { display.value = false },
+                    onClick = {
+                        saveSelectedDateTime()
+                        display.value = false },
                 ) {
                     Text("Confirm")
                 } }) {
@@ -98,7 +116,7 @@ fun DateAndTimePicker(display: MutableState<Boolean>) {
                         )
                 }
                 else {
-                    TimePicker(state = state,modifier = Modifier
+                    TimePicker(state = timePickerState,modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally))
                 }

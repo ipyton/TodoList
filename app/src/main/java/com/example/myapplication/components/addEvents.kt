@@ -2,6 +2,7 @@ package com.example.myapplication.components
 
 import android.Manifest
 import android.app.Activity
+import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
 import android.util.Log
@@ -46,8 +47,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import com.example.myapplication.ApiClient
+import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.entities.BusinessEntity
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import okhttp3.ResponseBody
@@ -56,8 +60,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.net.URLEncoder
-
-
+import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -120,6 +125,22 @@ fun AddEvents(
       mutableStateOf(-1.0)
     }
 
+    var isDone by remember {
+        mutableStateOf(false)
+    }
+
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ISO_DATE
+    val formattedDate = currentDate.format(formatter)
+    var selectedDateString by remember {
+        mutableStateOf(formattedDate)
+    }
+
+    var selectedTimeString by remember {
+        mutableStateOf("00:00")
+    }
+
+
     var activeSuggestion by remember {
         mutableStateOf(false)
     }
@@ -151,7 +172,11 @@ fun AddEvents(
     }
 
     if (displayDateTimePicker.value) {
-        DateAndTimePicker(displayDateTimePicker)
+        DateAndTimePicker(displayDateTimePicker,
+            onDateTimeSelected = { date, time ->
+                selectedDateString = date
+                selectedTimeString = time
+            })
     }
     else {
         Dialog(onDismissRequest = {  }) {
@@ -384,7 +409,9 @@ fun AddEvents(
                             Text("Cancel")
                         }
                         TextButton(
-                            onClick = {  },
+                            onClick = { writeDataToUserEvents(title, introduction, latitude, longitude, selectedDateString, selectedTimeString, isDone)
+                                fetchAndGroupTodoItems()
+                                showAddEvent.value = false},
                             modifier = Modifier.padding(8.dp),
                         ) {
                             Text("Confirm")
@@ -394,5 +421,47 @@ fun AddEvents(
             }
         }
     }
+}
+
+
+fun writeDataToUserEvents(
+    title: String,
+    introduction: String,
+    latitude: Double,
+    longitude: Double,
+    date: String,
+    time: String,
+    isDone: Boolean
+) {
+    val db = Firebase.firestore
+
+    val eventData = hashMapOf(
+        "title" to title,
+        "introduction" to introduction,
+        "date" to date,
+        "time" to time,
+        "isDone" to isDone,
+        "latitude" to latitude,
+        "longitude" to longitude
+    )
+
+    getUserDocumentByEmail(userEmail,
+        onSuccess = { userDocument ->
+            val userId = userDocument.documents.first().id // 获取用户文档的 ID
+            val userEventsCollection = db.collection("users").document(userId).collection("events")
+
+            userEventsCollection.add(eventData)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(ContentValues.TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+                }
+                .addOnFailureListener { e ->
+                    Log.w(ContentValues.TAG, "Error adding document", e)
+
+                }
+        },
+        onFailure = { exception ->
+            Log.e(ContentValues.TAG, "Error retrieving user document", exception)
+        }
+    )
 }
 

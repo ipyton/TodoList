@@ -42,9 +42,11 @@ import com.example.myapplication.R
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 
-var userEmail:String? = null
+var userEmail:String = ""
+
 @Composable
 fun Login(
     navController: NavHostController,
@@ -95,10 +97,31 @@ fun Login(
                             Log.d(TAG, "signInWithEmail:success")
                             val user = Firebase.auth.currentUser
                             val email = user?.email
-                            userEmail = email
+                            if (email != null) {
+                                userEmail = email
+                            }
+                            Log.d(userEmail, "userEmail:${userEmail}")
                             login.value = true
+                            user?.email?.let { userEmail ->
+                                Firebase.firestore.collection("users")
+                                    .document(user.uid)
+                                    .set(mapOf("email" to userEmail))
+                                    .addOnSuccessListener {
+                                        Log.d(TAG, "DocumentSnapshot successfully written!")
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.w(TAG, "Error writing document", e)
+                                    }
+                            }
+                        } else {
+                            Log.w(TAG, "signInWithEmail:failure", task.exception)
+                            Toast.makeText(
+                                context,
+                                "Password does not match username.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         }
-                        else
+                        //else
                         {
                             Log.w(TAG, "signInWithEmail:failure", task.exception)
                             Toast.makeText(

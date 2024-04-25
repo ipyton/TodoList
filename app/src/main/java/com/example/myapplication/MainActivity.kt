@@ -1,6 +1,6 @@
 package com.example.myapplication
 
-import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,8 +44,11 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -62,12 +66,15 @@ import com.example.myapplication.Pages.RegistrationPageThree
 import com.example.myapplication.Pages.RegistrationPageTwo
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
+import com.example.myapplication.Pages.deleteSelectedTodoItemsFromFirebase
+import com.example.myapplication.Pages.markSelectedTodoItemsAsDone
 
 import com.example.myapplication.components.AddEvents
+import com.example.myapplication.components.fetchAndGroupTodoItems
+import com.example.myapplication.components.selectedTodoItems
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.material.internal.ContextUtils.getActivity
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -124,6 +131,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun mainStage(
     loginState: MutableState<Boolean>,
@@ -154,6 +162,17 @@ fun mainStage(
 
 @Composable
 fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>,isVisible: MutableState<Boolean>, googleAuthUiClient: GoogleAuthUIClient) {
+    DisposableEffect(key1 = navController) {
+        val callback = NavController.OnDestinationChangedListener { _, _, _ ->
+            isVisible.value = false
+            selectedTodoItems.clear()
+        }
+        navController.addOnDestinationChangedListener(callback)
+        onDispose {
+            navController.removeOnDestinationChangedListener(callback)
+        }
+    }
+
     NavHost(navController = navController, startDestination = "today") {
         composable("Login") {
             AccountPage(login = login,  googleAuthUiClient)
@@ -202,6 +221,7 @@ fun AccountNavigator(
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScaffoldExample(
@@ -228,6 +248,9 @@ fun ScaffoldExample(
         mutableStateOf("TodoList")
     }
 
+    LaunchedEffect(Unit) {
+        fetchAndGroupTodoItems()
+    }
 
     Scaffold(
         topBar = {
@@ -242,13 +265,13 @@ fun ScaffoldExample(
                 actions = {
                     if(isVisible.value) {
                         if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
-                            IconButton(onClick = { /*  */ }) {
+                            IconButton(onClick = { markSelectedTodoItemsAsDone() }) {
                                 Icon(Icons.Filled.CheckCircle, contentDescription = "finish")
                             }
                         }
                         if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled"
                             || items[selectedItem] == "Done") {
-                            IconButton(onClick = { /*  */ }) {
+                            IconButton(onClick = { deleteSelectedTodoItemsFromFirebase() }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "delete")
                             }
 
