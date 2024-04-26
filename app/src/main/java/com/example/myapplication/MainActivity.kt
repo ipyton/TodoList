@@ -68,10 +68,8 @@ import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
 import com.example.myapplication.Pages.deleteSelectedTodoItemsFromFirebase
 import com.example.myapplication.Pages.markSelectedTodoItemsAsDone
-
 import com.example.myapplication.components.AddEvents
-import com.example.myapplication.components.fetchAndGroupTodoItems
-import com.example.myapplication.components.selectedTodoItems
+import com.example.myapplication.components.TodoListViewModel
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -92,6 +90,7 @@ class MainActivity : ComponentActivity() {
         .build()
 
     val db = Firebase.firestore
+    val todoListViewModel = TodoListViewModel()
 
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -149,6 +148,8 @@ fun mainStage(
         mutableStateOf(false)
     }
 
+
+
     return if (loginState.value) {
         ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient)
     }
@@ -161,11 +162,15 @@ fun mainStage(
 
 
 @Composable
-fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>,isVisible: MutableState<Boolean>, googleAuthUiClient: GoogleAuthUIClient) {
+fun MyNavigator(navController: NavHostController,
+                login: MutableState<Boolean>,
+                isVisible: MutableState<Boolean>,
+                googleAuthUiClient: GoogleAuthUIClient,
+                todoListViewModel: TodoListViewModel) {
     DisposableEffect(key1 = navController) {
         val callback = NavController.OnDestinationChangedListener { _, _, _ ->
             isVisible.value = false
-            selectedTodoItems.clear()
+            //selectedTodoItems.clear()
         }
         navController.addOnDestinationChangedListener(callback)
         onDispose {
@@ -178,10 +183,12 @@ fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>,i
             AccountPage(login = login,  googleAuthUiClient)
         }
         composable("Today") {
-            Today(isVisible = isVisible)
+            Today(isVisible = isVisible, viewModel = todoListViewModel)
         }
-        composable("Scheduled") { Scheduled(isVisible = isVisible) }
-        composable("Done") { Done(isVisible = isVisible) }
+        composable("Scheduled") {
+            Scheduled(isVisible = isVisible, viewModel = todoListViewModel)
+        }
+        composable("Done") { Done(isVisible = isVisible, viewModel = todoListViewModel) }
         composable("Location") { Location() }
         composable("Account") { Account(navController, login=login) }
     }
@@ -238,6 +245,8 @@ fun ScaffoldExample(
     val done : ComposableFun = {  Icon(Icons.Filled.CheckCircle, contentDescription = "Done")}
     val today : ComposableFun = { Icon(Icons.Rounded.Notifications, contentDescription = "today") }
     val navController = rememberNavController()
+    val todoListViewModel = remember { TodoListViewModel() }
+
     val icons = listOf(today, scheduled, done, location, account)
     var showEventAdder= remember {
         mutableStateOf(false)
@@ -248,8 +257,11 @@ fun ScaffoldExample(
         mutableStateOf("TodoList")
     }
 
-    LaunchedEffect(Unit) {
-        fetchAndGroupTodoItems()
+
+    val viewModel = remember { todoListViewModel }
+
+    LaunchedEffect(viewModel) {
+        viewModel.fetchAndGroupTodoItems()
     }
 
     Scaffold(
@@ -265,13 +277,21 @@ fun ScaffoldExample(
                 actions = {
                     if(isVisible.value) {
                         if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
-                            IconButton(onClick = { markSelectedTodoItemsAsDone() }) {
+                            IconButton(onClick = { markSelectedTodoItemsAsDone(viewModel.selectedTodoItems)
+                                viewModel.fetchAndGroupTodoItems()
+                                viewModel.selectedTodoItems.value = emptyList()
+                                isVisible.value = false
+                                 }) {
                                 Icon(Icons.Filled.CheckCircle, contentDescription = "finish")
                             }
                         }
                         if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled"
                             || items[selectedItem] == "Done") {
-                            IconButton(onClick = { deleteSelectedTodoItemsFromFirebase() }) {
+                            IconButton(onClick = { deleteSelectedTodoItemsFromFirebase(viewModel.selectedTodoItems)
+                                viewModel.fetchAndGroupTodoItems()
+                                viewModel.selectedTodoItems.value = emptyList()
+                                isVisible.value = false
+                            }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "delete")
                             }
 
@@ -312,9 +332,10 @@ fun ScaffoldExample(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (showEventAdder.value) {
-                AddEvents(showEventAdder)
+                AddEvents(showEventAdder, viewModel)
             }
-            MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient )
+            MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient,todoListViewModel = todoListViewModel
+            )
         }
     }
 }

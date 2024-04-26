@@ -10,8 +10,9 @@ data class TodoItem(
     var latitude: Double,
     var longitude: Double,
     var time: String,
-    var title: String
+    var title: String,
+    var selected : Boolean
 ){
-    constructor() : this("","", "", false, 0.0, 0.0, "", "")
+    constructor() : this("","", "", false, 0.0, 0.0, "", "", false)
 
 }

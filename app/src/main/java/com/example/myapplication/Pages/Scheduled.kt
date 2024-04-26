@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.DropdownMenu
@@ -17,6 +18,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,20 +27,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.example.myapplication.components.fetchAndGroupTodoItems
+import com.example.myapplication.components.EditEvents
+import com.example.myapplication.components.TodoListViewModel
 import com.example.myapplication.components.getUserDocumentByEmail
-import com.example.myapplication.components.scheduledTodoItems
-import com.example.myapplication.components.selectedTodoItems
+
+
 import com.example.myapplication.entities.TodoItem
 
 @Composable
-fun Scheduled(isVisible: MutableState<Boolean>) {
+fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
+    var scheduledItems = viewModel.scheduledTodoItems
+    var selectedItems = viewModel.selectedTodoItems
+    var showEventEdit= remember {
+        mutableStateOf(false)
+    }
+
+
     //var selectedTodoItems = remember { mutableStateOf(mutableListOf<TodoItem>()) }
+    //var scheduledItems = remember { mutableStateOf(scheduledTodoItems.toMutableList()) }
 
     LazyColumn {
-        items(scheduledTodoItems.size) { index ->
-            val todoItem = scheduledTodoItems[index]
-            var state by remember { mutableStateOf(false) }
+        items(scheduledItems.value.size) { index ->
+            val todoItem = scheduledItems.value[index]
+            val isSelected = viewModel.selectedTodoItems.value.contains(todoItem)
             var expanded by remember { mutableStateOf(false) }
             Column {
                 ListItem(
@@ -47,16 +58,12 @@ fun Scheduled(isVisible: MutableState<Boolean>) {
                     supportingContent = { Text(todoItem.time) },
                     leadingContent = {
                         RadioButton(
-                            selected = state,
-                            onClick = { state = !state
-                                if (state) {
-                                    selectedTodoItems.add(todoItem)
-                                } else {
-                                    selectedTodoItems.remove(todoItem)
-                                }
-                                isVisible.value = selectedTodoItems.isNotEmpty()
-                                Log.d("RadioButtonClicked", "RadioButton clicked for TodoItem: ${todoItem.title}, isSelected: $state")
-                                Log.d("SelectedTodoItems", "Selected Todo Items: ${selectedTodoItems}, TodoItem: ${todoItem.title}")
+                            selected = isSelected,
+                            onClick = { viewModel.toggleTodoItemSelection(todoItem)
+
+                                isVisible.value = selectedItems.value.isNotEmpty()
+                                Log.d("RadioButtonClicked", "RadioButton clicked for TodoItem: ${todoItem.title}")
+                                //Log.d("SelectedTodoItems", "Selected Todo Items: ${selectedTodoItems}, TodoItem: ${todoItem.title}")
                                 //Log.d("IsEmpty", "isEmpty in Scheduled: ${selectedTodoItems.value.isNotEmpty()}")
 
                                 //Log.d("IsVisible", "isVisible value in Scheduled: ${isVisible.value}")
@@ -80,26 +87,39 @@ fun Scheduled(isVisible: MutableState<Boolean>) {
                                 onClick = {
                                     //Log.d("TodoItems", "Todo Items before deletion: $todoItems")
                                     deleteTodoItemFromFirebase(todoItem.documentId)
-                                    scheduledTodoItems.removeAll { it.documentId == todoItem.documentId }
-                                    //todoItems = scheduledTodoItems.toMutableList()
+                                    scheduledItems.value = scheduledItems.value.toMutableList().apply {
+                                        removeAll { it.documentId == todoItem.documentId }
+                                    }
+
                                     //Log.d("TodoItems", "Todo Items after deletion: $todoItems")
 
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        Icons.Outlined.Edit,
+                                        Icons.Outlined.Delete,
                                         contentDescription = null
                                     )
                                 })
                             DropdownMenuItem(
                                 text = { Text("edit") },
-                                onClick = { /* Handle settings! */ },
+                                onClick = {
+                                    //expanded = false
+
+                                    showEventEdit.value = true
+                                    },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.Edit,
                                         contentDescription = null
                                     )
                                 })
+                            if(showEventEdit.value) {
+                                EditEvents(
+                                    showEditEvent = showEventEdit,
+                                    viewModel = viewModel,
+                                    todoItem = todoItem
+                                )
+                            }
 
                         }
                     }
@@ -131,21 +151,22 @@ fun deleteTodoItemFromFirebase(documentId: String) {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun deleteSelectedTodoItemsFromFirebase() {
-    for (todoItem in selectedTodoItems) {
+fun deleteSelectedTodoItemsFromFirebase(selectedItemsState: MutableState<List<TodoItem>>) {
+    val selectedItems: List<TodoItem> = selectedItemsState.value
+    for (todoItem in selectedItems) {
         deleteTodoItemFromFirebase(todoItem.documentId)
     }
-    fetchAndGroupTodoItems()
+
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun markSelectedTodoItemsAsDone() {
-    for (todoItem in selectedTodoItems) {
+fun markSelectedTodoItemsAsDone(selectedItemsState: MutableState<List<TodoItem>>) {
+    val selectedItems: List<TodoItem> = selectedItemsState.value
+    for (todoItem in selectedItems) {
         todoItem.isDone = true
         updateTodoItemInFirebase(todoItem)
     }
 
-    fetchAndGroupTodoItems()
 }
 
 fun updateTodoItemInFirebase(todoItem: TodoItem) {
