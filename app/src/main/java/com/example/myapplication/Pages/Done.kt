@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.DropdownMenu
@@ -25,18 +26,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.example.myapplication.Activities.ActivityItem
-import com.example.myapplication.components.doneTodoItems
-import com.example.myapplication.components.scheduledTodoItems
+import com.example.myapplication.components.EditEvents
+import com.example.myapplication.components.TodoListViewModel
+
 import com.example.myapplication.entities.TodoItem
 
 @Composable
-fun Done(isVisible: MutableState<Boolean>) {
-    var selectedTodoItems = remember { mutableStateOf(mutableListOf<TodoItem>()) }
+fun Done(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
+    var doneItems = viewModel.doneTodoItems
+    var selectedItems = viewModel.selectedTodoItems
+    var showEventEdit= remember {
+        mutableStateOf(false)
+    }
+    //var selectedTodoItems = remember { mutableStateOf(mutableListOf<TodoItem>()) }
+    //var scheduledItems = remember { mutableStateOf(scheduledTodoItems.toMutableList()) }
 
     LazyColumn {
-        items(doneTodoItems.size) { index ->
-            val todoItem = doneTodoItems[index]
-            var state by remember { mutableStateOf(false) }
+        items(doneItems.value.size) { index ->
+            val todoItem = doneItems.value[index]
+            val isSelected = viewModel.selectedTodoItems.value.contains(todoItem)
             var expanded by remember { mutableStateOf(false) }
             Column {
                 ListItem(
@@ -45,16 +53,10 @@ fun Done(isVisible: MutableState<Boolean>) {
                     supportingContent = { Text(todoItem.time) },
                     leadingContent = {
                         RadioButton(
-                            selected = state,
-                            onClick = { state = !state
-                                if (state) {
-                                    selectedTodoItems.value.add(todoItem)
-                                } else {
-                                    selectedTodoItems.value.remove(todoItem)
-                                }
-                                isVisible.value = selectedTodoItems.value.isNotEmpty()
-                                //Log.d("RadioButtonClicked", "RadioButton clicked for TodoItem: ${todoItem.title}, isSelected: $state")
-                                //Log.d("SelectedTodoItems", "Selected Todo Items: ${selectedTodoItems.value}, TodoItem: ${todoItem.title}")
+                            selected = isSelected,
+                            onClick = { viewModel.toggleTodoItemSelection(todoItem)
+                                isVisible.value = selectedItems.value.isNotEmpty()
+                                //Log.d("SelectedTodoItems", "Selected Todo Items: ${selectedTodoItems}, TodoItem: ${todoItem.title}")
                                 //Log.d("IsEmpty", "isEmpty in Scheduled: ${selectedTodoItems.value.isNotEmpty()}")
 
                                 //Log.d("IsVisible", "isVisible value in Scheduled: ${isVisible.value}")
@@ -78,27 +80,36 @@ fun Done(isVisible: MutableState<Boolean>) {
                                 onClick = {
                                     //Log.d("TodoItems", "Todo Items before deletion: $todoItems")
                                     deleteTodoItemFromFirebase(todoItem.documentId)
-                                    doneTodoItems.removeAll { it.documentId == todoItem.documentId }
-
+                                    doneItems.value = doneItems.value.toMutableList().apply {
+                                        removeAll { it.documentId == todoItem.documentId }
+                                    }
                                     //Log.d("TodoItems", "Todo Items after deletion: $todoItems")
 
                                 },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Outlined.Delete,
+                                        contentDescription = null
+                                    )
+                                })
+                            DropdownMenuItem(
+                                text = { Text("edit") },
+                                onClick = {
+                                    showEventEdit.value = true
+                                          },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.Edit,
                                         contentDescription = null
                                     )
                                 })
-                            DropdownMenuItem(
-                                text = { Text("Settings") },
-                                onClick = { /* Handle settings! */ },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Outlined.Settings,
-                                        contentDescription = null
-                                    )
-                                })
-
+                            if(showEventEdit.value) {
+                                EditEvents(
+                                    showEditEvent = showEventEdit,
+                                    viewModel = viewModel,
+                                    todoItem = todoItem
+                                )
+                            }
                         }
                     }
 
@@ -107,3 +118,4 @@ fun Done(isVisible: MutableState<Boolean>) {
         }
     }
 }
+

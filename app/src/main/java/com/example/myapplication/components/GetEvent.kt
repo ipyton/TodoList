@@ -3,20 +3,48 @@ package com.example.myapplication.components
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.entities.TodoItem
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 import java.time.format.DateTimeParseException
 
 
-var todayTodoItems: MutableList<TodoItem> = mutableListOf()
-var scheduledTodoItems: MutableList<TodoItem> = mutableListOf()
-var doneTodoItems: MutableList<TodoItem> = mutableListOf()
-var selectedTodoItems: MutableList<TodoItem> = mutableListOf()
+class TodoListViewModel : ViewModel() {
+    val todayTodoItems: MutableState<List<TodoItem>> = mutableStateOf(emptyList())
+    val scheduledTodoItems: MutableState<List<TodoItem>> = mutableStateOf(emptyList())
+    val doneTodoItems: MutableState<List<TodoItem>> = mutableStateOf(emptyList())
+    val selectedTodoItems: MutableState<List<TodoItem>> = mutableStateOf(emptyList())
+    val todoItemSelections: MutableList<Boolean> = mutableListOf()
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun fetchAndGroupTodoItems() {
+        getAllTodoItemsFromFirebase { todoItems ->
+            val groupedTodoItems = groupTodoItemsByDate(todoItems)
+            todayTodoItems.value = (groupedTodoItems["Today"] ?: emptyList()).toMutableList()
+            scheduledTodoItems.value =
+                (groupedTodoItems["Scheduled"] ?: emptyList()).toMutableList()
+            doneTodoItems.value = (groupedTodoItems["Done"] ?: emptyList()).toMutableList()
+        }
+    }
+    fun toggleTodoItemSelection(todoItem: TodoItem) {
+        val updatedSelectedItems = selectedTodoItems.value.toMutableList()
+        if (updatedSelectedItems.contains(todoItem)) {
+            updatedSelectedItems.remove(todoItem)
+        } else {
+            updatedSelectedItems.add(todoItem)
+        }
+        selectedTodoItems.value = updatedSelectedItems
+    }
+}
 
 //var scheduledStates: MutableList<Boolean> = mutableListOf()
 
@@ -121,6 +149,7 @@ fun getUserDocumentByEmail(userEmail: String, onSuccess: (QuerySnapshot) -> Unit
         }
 }
 
+/*
 @RequiresApi(Build.VERSION_CODES.O)
 fun fetchAndGroupTodoItems() {
     getAllTodoItemsFromFirebase { todoItems ->
@@ -136,5 +165,6 @@ fun fetchAndGroupTodoItems() {
 
     }
 }
+*/
 
 
