@@ -56,14 +56,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
 import com.example.myapplication.Pages.ForgetPageOne
-import com.example.myapplication.Pages.ForgetPageThree
-import com.example.myapplication.Pages.ForgetPageTwo
+//import com.example.myapplication.Pages.ForgetPageThree
+//import com.example.myapplication.Pages.ForgetPageTwo
 
 import com.example.myapplication.Pages.Location
 import com.example.myapplication.Pages.Login
 import com.example.myapplication.Pages.RegistrationPageOne
-import com.example.myapplication.Pages.RegistrationPageThree
+
 import com.example.myapplication.Pages.RegistrationPageTwo
+
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
 import com.example.myapplication.Pages.deleteSelectedTodoItemsFromFirebase
@@ -215,11 +216,10 @@ fun AccountNavigator(
         }
         //composable("forget") { forgetPage(navController) }
         composable("forgetOne") { ForgetPageOne(navController, login) }
-        composable("forgetTwo") { ForgetPageTwo(navController, login) }
-        composable("forgetThree") { ForgetPageThree(navController, login) }
+//        composable("forgetTwo") { ForgetPageTwo(navController, login) }
+//        composable("forgetThree") { ForgetPageThree(navController, login) }
         composable("registrationOne") { RegistrationPageOne(navController) }
-        composable("registrationTwo") { RegistrationPageTwo(navController, login) }
-        composable("registrationThree") { RegistrationPageThree(navController, login) }
+        composable("registrationTwo") { RegistrationPageTwo(navController) }
 
 
 

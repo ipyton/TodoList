@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.myapplication.R
@@ -84,53 +87,61 @@ fun Login(
                 value = surname,
                 onValueChange = { surname = it },
                 label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
             )}
         Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
             Button(onClick = {
-                Firebase.auth.signInWithEmailAndPassword(name, surname)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful)
-                        {
-                            Log.d(TAG, "signInWithEmail:success")
-                            val user = Firebase.auth.currentUser
-                            val email = user?.email
-                            if (email != null) {
-                                userEmail = email
+                if (name.isEmpty() || surname.isEmpty())
+                {
+                    Toast.makeText(
+                        context,
+                        "Email and password can not be empty.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+                else
+                {
+                    Firebase.auth.signInWithEmailAndPassword(name, surname)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful)
+                            {
+                                Log.d(TAG, "signInWithEmail:success")
+                                val user = Firebase.auth.currentUser
+                                val email = user?.email
+                                if (email != null)
+                                {
+                                    userEmail = email
+                                }
+                                Log.d(userEmail, "userEmail:${userEmail}")
+                                login.value = true
+                                user?.email?.let { userEmail ->
+                                    Firebase.firestore.collection("users")
+                                        .document(user.uid)
+                                        .set(mapOf("email" to userEmail))
+                                        .addOnSuccessListener {
+                                            Log.d(TAG, "DocumentSnapshot successfully written!")
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.w(TAG, "Error writing document", e)
+                                        }
+                                }
                             }
-                            Log.d(userEmail, "userEmail:${userEmail}")
-                            login.value = true
-                            user?.email?.let { userEmail ->
-                                Firebase.firestore.collection("users")
-                                    .document(user.uid)
-                                    .set(mapOf("email" to userEmail))
-                                    .addOnSuccessListener {
-                                        Log.d(TAG, "DocumentSnapshot successfully written!")
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.w(TAG, "Error writing document", e)
-                                    }
+                            else
+                            {
+                                Log.w(TAG, "signInWithEmail:failure", task.exception)
+                                Toast.makeText(
+                                    context,
+                                    "Password does not match email.",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
                             }
-                        } else {
-                            Log.w(TAG, "signInWithEmail:failure", task.exception)
-                            Toast.makeText(
-                                context,
-                                "Password does not match username.",
-                                Toast.LENGTH_SHORT,
-                            ).show()
+
                         }
-                        //else
-                        {
-                            Log.w(TAG, "signInWithEmail:failure", task.exception)
-                            Toast.makeText(
-                                context,
-                                "Password does not match username.",
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                        }
-                    }
+                }
 
             }) {
                 Text("Login")
