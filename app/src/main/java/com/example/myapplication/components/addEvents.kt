@@ -21,13 +21,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -154,7 +158,7 @@ fun AddEvents(
         DateAndTimePicker(displayDateTimePicker)
     }
     else {
-        Dialog(onDismissRequest = {  }) {
+        Dialog(onDismissRequest = { }) {
             // Draw a rectangle shape with rounded corners inside the dialog
             Card(
                 modifier = Modifier
@@ -198,7 +202,6 @@ fun AddEvents(
 
                     }
                     if (!displayLocationPicker.value) {
-                        Log.d("enter", "1111")
                         if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                             && ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                             request.launch(arrayOf(
@@ -213,20 +216,38 @@ fun AddEvents(
 
                         DockedSearchBar(
                             query = searchLocation,
+                            leadingIcon={
+                                if (activeSuggestion) IconButton(onClick = {
+                                searchLocation = ""
+                                activeSuggestion = false
+                                suggestions.clear()
+                            }) {
+                                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Delete and disable the text input box")
+                            }},
+                            trailingIcon = {
+                                if (activeSuggestion)
+                                IconButton(onClick = {
+                                searchLocation = ""
+                                suggestions.clear()
+                            }) {
+                                Icon(Icons.Outlined.Clear, contentDescription = "Delete all contents")
+                            }},
                             onQueryChange = {
                                 searchLocation = it
                                 //suggestions.clear()
                                 if (it.isEmpty()) {
                                     activeSuggestion = false
-                                } else {
+                                }
+                                if (it.length >= 3) {
                                     if (latitude == -1.0 || longitude == -1.0) {
                                         return@DockedSearchBar
                                     }
                                     coroutineScope.launch {
-                                        Log.d("request", URLEncoder.encode(searchLocation, "UTF-8"))
-                                        ApiClient.apiService.autoCompelete("$latitude,$longitude", URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
-                                            Callback<ResponseBody> {
+
+                                            ApiClient.apiService.autoCompelete(URLEncoder.encode("$latitude,$longitude", "UTF-8"), URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="establishment").enqueue(object :
+                                                Callback<ResponseBody> {
                                                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                                    println(call.request().url())
                                                     if (response.isSuccessful) {
                                                         var resultset:MutableList<BusinessEntity> = ArrayList()
                                                         val post = response.body()?.string()
@@ -253,9 +274,9 @@ fun AddEvents(
                                                                 //Log.d("details", "onResponse: " + fullName + latitude + longitude)
                                                                 resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
                                                             }
-                                                            if (!activeSuggestion) {
-                                                                suggestions.clear()
-                                                            }
+//                                                            if (activeSuggestion) {
+//                                                                suggestions.clear()
+//                                                            }
                                                             suggestions = resultset
                                                             activeSuggestion = true
                                                         }
@@ -270,10 +291,7 @@ fun AddEvents(
                                                     // Handle failure
                                                 }
                                             }
-                                        )
-
-
-
+                                            )
                                 }
 
                             }

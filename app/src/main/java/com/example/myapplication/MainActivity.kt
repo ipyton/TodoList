@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 
 import androidx.compose.material3.Icon
@@ -281,7 +282,8 @@ fun ScaffoldExample(
             FloatingActionButton(onClick = { showEventAdder.value = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
             }
-        }
+        },
+        floatingActionButtonPosition = FabPosition.Center
     ) { innerPadding ->
         Column(
             modifier = Modifier
