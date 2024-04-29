@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.example.myapplication.MainApplication
 import com.example.myapplication.components.EditEvents
 import com.example.myapplication.components.TodoListViewModel
 import com.example.myapplication.components.getUserDocumentByEmail
@@ -151,19 +152,27 @@ fun deleteTodoItemFromFirebase(documentId: String) {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun deleteSelectedTodoItemsFromFirebase(selectedItemsState: MutableState<List<TodoItem>>) {
+suspend fun deleteSelectedTodoItemsFromFirebase(selectedItemsState: MutableState<List<TodoItem>>) {
     val selectedItems: List<TodoItem> = selectedItemsState.value
+    val roomDao = MainApplication.database.todoItemDao()
     for (todoItem in selectedItems) {
         deleteTodoItemFromFirebase(todoItem.documentId)
+        roomDao.deleteById(todoItem.documentId)
     }
 
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun markSelectedTodoItemsAsDone(selectedItemsState: MutableState<List<TodoItem>>) {
+suspend fun markSelectedTodoItemsAsDone(selectedItemsState: MutableState<List<TodoItem>>) {
     val selectedItems: List<TodoItem> = selectedItemsState.value
+    val roomDao = MainApplication.database.todoItemDao()
     for (todoItem in selectedItems) {
         todoItem.isDone = true
+
+        val existedItem = roomDao.getById(todoItem.documentId).getOrNull(0)
+        if (existedItem == null) roomDao.upsert(todoItem)
+        else roomDao.upsert(todoItem.copy(id = existedItem.id))
+
         updateTodoItemInFirebase(todoItem)
     }
 

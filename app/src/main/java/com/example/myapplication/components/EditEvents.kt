@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +49,7 @@ import com.example.myapplication.ApiClient
 import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.entities.BusinessEntity
 import com.example.myapplication.entities.TodoItem
+import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -63,14 +65,15 @@ import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(64)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EditEvents(
     showEditEvent: MutableState<Boolean>,
     viewModel: TodoListViewModel,
     todoItem: TodoItem
+) {
 
-    ) {
+    val todoItemViewModel: TodoItemViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
         LocalContext.current
@@ -414,6 +417,7 @@ fun EditEvents(
                                 todoItem.introduction = introduction
                                 todoItem.date = selectedDateString
                                 todoItem.time = selectedTimeString
+                                todoItemViewModel.insertTodoItem(todoItem)
                                 updateTodoItemInFirebase(todoItem)
                                 viewModel.fetchAndGroupTodoItems()
                                 showEditEvent.value = false},

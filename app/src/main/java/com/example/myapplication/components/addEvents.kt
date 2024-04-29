@@ -1,7 +1,6 @@
 package com.example.myapplication.components
 
 import android.Manifest
-import android.app.Activity
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
@@ -12,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,22 +44,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.ApiClient
 import com.example.myapplication.Pages.userEmail
+import com.example.myapplication.TodoItemDao
 import com.example.myapplication.entities.BusinessEntity
+import com.example.myapplication.entities.TodoItem
+import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.net.URLEncoder
-import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -71,12 +71,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddEvents(
     showAddEvent: MutableState<Boolean>,
-    viewModel: TodoListViewModel
+    viewModel: TodoListViewModel,
+    itemViewModel: TodoItemViewModel,
 ) {
 
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
         LocalContext.current
     )
+
 
     val request = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()
     ) {
@@ -411,7 +413,8 @@ fun AddEvents(
                             Text("Cancel")
                         }
                         TextButton(
-                            onClick = { writeDataToUserEvents(title, introduction, latitude, longitude, selectedDateString, selectedTimeString, isDone)
+                            onClick = {
+                                writeDataToUserEvents(title, introduction, latitude, longitude, selectedDateString, selectedTimeString, isDone)
                                 viewModel.fetchAndGroupTodoItems()
                                 showAddEvent.value = false},
                             modifier = Modifier.padding(8.dp),
@@ -433,9 +436,10 @@ fun writeDataToUserEvents(
     longitude: Double,
     date: String,
     time: String,
-    isDone: Boolean
+    isDone: Boolean,
 ) {
     val db = Firebase.firestore
+
 
     val eventData = hashMapOf(
         "title" to title,
@@ -449,12 +453,27 @@ fun writeDataToUserEvents(
 
     getUserDocumentByEmail(userEmail,
         onSuccess = { userDocument ->
-            val userId = userDocument.documents.first().id // 获取用户文档的 ID
+            val userId = userDocument.documents.first().id
             val userEventsCollection = db.collection("users").document(userId).collection("events")
 
             userEventsCollection.add(eventData)
                 .addOnSuccessListener { documentReference ->
                     Log.d(ContentValues.TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+
+                    val viewModel = TodoItemViewModel()
+                    viewModel.insertTodoItem(
+                        TodoItem(
+                            title = title,
+                            introduction = introduction,
+                            latitude = latitude,
+                            longitude = longitude,
+                            date = date,
+                            time = time,
+                            isDone = isDone,
+                            documentId = documentReference.id,
+                            selected = false
+                        )
+                    )
                 }
                 .addOnFailureListener { e ->
                     Log.w(ContentValues.TAG, "Error adding document", e)
@@ -466,4 +485,5 @@ fun writeDataToUserEvents(
         }
     )
 }
+
 

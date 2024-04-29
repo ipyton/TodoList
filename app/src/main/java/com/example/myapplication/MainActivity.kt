@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.app.Application
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -47,12 +48,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
 import com.example.myapplication.Pages.ForgetPageOne
@@ -71,11 +74,14 @@ import com.example.myapplication.Pages.deleteSelectedTodoItemsFromFirebase
 import com.example.myapplication.Pages.markSelectedTodoItemsAsDone
 import com.example.myapplication.components.AddEvents
 import com.example.myapplication.components.TodoListViewModel
+import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.GoogleAuthUIClient
+import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
@@ -90,13 +96,30 @@ class MainActivity : ComponentActivity() {
         .setCredentialOptions(listOf(googleIdOption))
         .build()
 
-    val db = Firebase.firestore
+    //val db = Firebase.firestore
     val todoListViewModel = TodoListViewModel()
 
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        /*lifecycleScope.launch(Dispatchers.IO) {
+            // 创建一个 TodoItem 实例
+            val todoItem = TodoItem(
+                documentId = "doc1",
+                date = "2024-04-28",
+                introduction = "This is a test todo item",
+                isDone = false,
+                latitude = 0.0,
+                longitude = 0.0,
+                time = "12:00 PM",
+                title = "Test Todo Item",
+                selected = false
+            )
+
+            // 插入数据到数据库
+            db.todoItemDao().insert(todoItem)
+        }*/
         val googleAuthUiClient by lazy{ GoogleAuthUIClient(context=applicationContext, Identity.getSignInClient(applicationContext)) }
 
         setContent {
@@ -136,8 +159,11 @@ class MainActivity : ComponentActivity() {
 fun mainStage(
     loginState: MutableState<Boolean>,
     launcher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>,
-    googleAuthUiClient: GoogleAuthUIClient
+    googleAuthUiClient: GoogleAuthUIClient,
+
 ) {
+
+
     val userName = remember {
         mutableStateOf("")
     }
@@ -234,7 +260,7 @@ fun AccountNavigator(
 fun ScaffoldExample(
     login: MutableState<Boolean>,
     isVisible: MutableState<Boolean>,
-    googleAuthUiClient: GoogleAuthUIClient
+    googleAuthUiClient: GoogleAuthUIClient,
 ) {
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -246,6 +272,7 @@ fun ScaffoldExample(
     val today : ComposableFun = { Icon(Icons.Rounded.Notifications, contentDescription = "today") }
     val navController = rememberNavController()
     val todoListViewModel = remember { TodoListViewModel() }
+    val todoItemViewModel = remember { TodoItemViewModel() }
 
     val icons = listOf(today, scheduled, done, location, account)
     var showEventAdder= remember {
@@ -259,6 +286,8 @@ fun ScaffoldExample(
 
 
     val viewModel = remember { todoListViewModel }
+    val coroutineScope = rememberCoroutineScope()
+
 
     LaunchedEffect(viewModel) {
         viewModel.fetchAndGroupTodoItems()
@@ -277,20 +306,26 @@ fun ScaffoldExample(
                 actions = {
                     if(isVisible.value) {
                         if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
-                            IconButton(onClick = { markSelectedTodoItemsAsDone(viewModel.selectedTodoItems)
-                                viewModel.fetchAndGroupTodoItems()
-                                viewModel.selectedTodoItems.value = emptyList()
-                                isVisible.value = false
+                            IconButton(onClick = {
+                                coroutineScope.launch {
+                                    markSelectedTodoItemsAsDone(viewModel.selectedTodoItems)
+                                    viewModel.fetchAndGroupTodoItems()
+                                    viewModel.selectedTodoItems.value = emptyList()
+                                    isVisible.value = false
+                                }
                                  }) {
                                 Icon(Icons.Filled.CheckCircle, contentDescription = "finish")
                             }
                         }
                         if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled"
                             || items[selectedItem] == "Done") {
-                            IconButton(onClick = { deleteSelectedTodoItemsFromFirebase(viewModel.selectedTodoItems)
-                                viewModel.fetchAndGroupTodoItems()
-                                viewModel.selectedTodoItems.value = emptyList()
-                                isVisible.value = false
+                            IconButton(onClick = {
+                                coroutineScope.launch {
+                                    deleteSelectedTodoItemsFromFirebase(viewModel.selectedTodoItems)
+                                    viewModel.fetchAndGroupTodoItems()
+                                    viewModel.selectedTodoItems.value = emptyList()
+                                    isVisible.value = false
+                                }
                             }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "delete")
                             }
@@ -332,7 +367,7 @@ fun ScaffoldExample(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (showEventAdder.value) {
-                AddEvents(showEventAdder, viewModel)
+                AddEvents(showEventAdder, viewModel, todoItemViewModel)
             }
             MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient,todoListViewModel = todoListViewModel
             )

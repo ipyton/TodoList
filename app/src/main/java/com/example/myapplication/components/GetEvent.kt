@@ -74,7 +74,7 @@ fun groupTodoItemsByDate(todoItems: List<TodoItem>): Map<String, List<TodoItem>>
                 groupedTodoItems[key] = mutableListOf()
             }
             groupedTodoItems[key]?.add(todoItem)
-            Log.d("TodoItemGrouping", "TodoItem: ${todoItem.title} Date: ${todoItem.date} Key: $key")
+            //Log.d("TodoItemGrouping", "TodoItem: ${todoItem.title} Date: ${todoItem.date} Key: $key")
         } catch (e: DateTimeParseException) {
             Log.e("DateTimeParseException", "Error parsing date: ${todoItem.date}", e)
         }
