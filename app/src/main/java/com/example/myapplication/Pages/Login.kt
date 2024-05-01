@@ -49,6 +49,7 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 
 var userEmail:String = ""
+var userId :String = ""
 
 @Composable
 fun Login(
@@ -111,10 +112,12 @@ fun Login(
                             {
                                 Log.d(TAG, "signInWithEmail:success")
                                 val user = Firebase.auth.currentUser
+                                userId = Firebase.auth.currentUser?.uid ?:"defaultUserId"
                                 val email = user?.email
                                 if (email != null)
                                 {
                                     userEmail = email
+
                                 }
                                 Log.d(userEmail, "userEmail:${userEmail}")
                                 login.value = true

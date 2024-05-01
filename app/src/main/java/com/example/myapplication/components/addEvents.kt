@@ -46,10 +46,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import com.example.myapplication.ApiClient
 import com.example.myapplication.Pages.userEmail
+import com.example.myapplication.Pages.userId
 import com.example.myapplication.TodoItemDao
 import com.example.myapplication.entities.BusinessEntity
 import com.example.myapplication.entities.TodoItem
+import com.example.myapplication.util.FirebaseUtil.writeToFirebase
 import com.example.myapplication.viewmodel.TodoItemViewModel
+import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -414,7 +417,18 @@ fun AddEvents(
                         }
                         TextButton(
                             onClick = {
-                                writeDataToUserEvents(title, introduction, latitude, longitude, selectedDateString, selectedTimeString, isDone)
+
+                                    writeToFirebase(
+                                        userId,
+                                        title,
+                                        introduction,
+                                        latitude,
+                                        longitude,
+                                        selectedDateString,
+                                        selectedTimeString,
+                                        isDone
+                                    )
+
                                 viewModel.fetchAndGroupTodoItems()
                                 showAddEvent.value = false},
                             modifier = Modifier.padding(8.dp),
@@ -429,61 +443,6 @@ fun AddEvents(
 }
 
 
-fun writeDataToUserEvents(
-    title: String,
-    introduction: String,
-    latitude: Double,
-    longitude: Double,
-    date: String,
-    time: String,
-    isDone: Boolean,
-) {
-    val db = Firebase.firestore
 
-
-    val eventData = hashMapOf(
-        "title" to title,
-        "introduction" to introduction,
-        "date" to date,
-        "time" to time,
-        "isDone" to isDone,
-        "latitude" to latitude,
-        "longitude" to longitude
-    )
-
-    getUserDocumentByEmail(userEmail,
-        onSuccess = { userDocument ->
-            val userId = userDocument.documents.first().id
-            val userEventsCollection = db.collection("users").document(userId).collection("events")
-
-            userEventsCollection.add(eventData)
-                .addOnSuccessListener { documentReference ->
-                    Log.d(ContentValues.TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-
-                    val viewModel = TodoItemViewModel()
-                    viewModel.insertTodoItem(
-                        TodoItem(
-                            title = title,
-                            introduction = introduction,
-                            latitude = latitude,
-                            longitude = longitude,
-                            date = date,
-                            time = time,
-                            isDone = isDone,
-                            documentId = documentReference.id,
-                            selected = false
-                        )
-                    )
-                }
-                .addOnFailureListener { e ->
-                    Log.w(ContentValues.TAG, "Error adding document", e)
-
-                }
-        },
-        onFailure = { exception ->
-            Log.e(ContentValues.TAG, "Error retrieving user document", exception)
-        }
-    )
-}
 
 

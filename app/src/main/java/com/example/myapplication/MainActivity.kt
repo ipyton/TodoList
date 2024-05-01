@@ -3,6 +3,7 @@ package com.example.myapplication
 import android.app.Application
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -48,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -70,13 +72,13 @@ import com.example.myapplication.Pages.RegistrationPageTwo
 
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
-import com.example.myapplication.Pages.deleteSelectedTodoItemsFromFirebase
-import com.example.myapplication.Pages.markSelectedTodoItemsAsDone
 import com.example.myapplication.components.AddEvents
-import com.example.myapplication.components.TodoListViewModel
 import com.example.myapplication.entities.TodoItem
+import com.example.myapplication.util.FirebaseUtil.deleteSelectedTodoItemsFromFirebase
+import com.example.myapplication.util.FirebaseUtil.markSelectedTodoItemsAsDone
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.example.myapplication.viewmodel.TodoItemViewModel
+import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.firestore.ktx.firestore
@@ -188,6 +190,7 @@ fun mainStage(
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyNavigator(navController: NavHostController,
                 login: MutableState<Boolean>,
@@ -273,6 +276,8 @@ fun ScaffoldExample(
     val navController = rememberNavController()
     val todoListViewModel = remember { TodoListViewModel() }
     val todoItemViewModel = remember { TodoItemViewModel() }
+    val selectedTodoItems by todoListViewModel.selectedTodoItems.collectAsState()
+
 
     val icons = listOf(today, scheduled, done, location, account)
     var showEventAdder= remember {
@@ -304,37 +309,36 @@ fun ScaffoldExample(
                     Text(items[selectedItem])
                 },
                 actions = {
-                    if(isVisible.value) {
-                        if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
+                    if (selectedTodoItems.isNotEmpty()) {
+                        if (items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
                             IconButton(onClick = {
                                 coroutineScope.launch {
-                                    markSelectedTodoItemsAsDone(viewModel.selectedTodoItems)
-                                    viewModel.fetchAndGroupTodoItems()
-                                    viewModel.selectedTodoItems.value = emptyList()
+                                    markSelectedTodoItemsAsDone(selectedTodoItems, viewModel)
                                     isVisible.value = false
                                 }
-                                 }) {
+                            }) {
                                 Icon(Icons.Filled.CheckCircle, contentDescription = "finish")
                             }
                         }
-                        if(items[selectedItem] == "Today" || items[selectedItem] == "Scheduled"
-                            || items[selectedItem] == "Done") {
+                        if (items[selectedItem] == "Today" || items[selectedItem] == "Scheduled"
+                            || items[selectedItem] == "Done"
+                        ) {
                             IconButton(onClick = {
                                 coroutineScope.launch {
-                                    deleteSelectedTodoItemsFromFirebase(viewModel.selectedTodoItems)
-                                    viewModel.fetchAndGroupTodoItems()
-                                    viewModel.selectedTodoItems.value = emptyList()
+                                    deleteSelectedTodoItemsFromFirebase(
+                                        selectedTodoItems,
+                                        todoListViewModel
+                                    )
                                     isVisible.value = false
+
                                 }
                             }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "delete")
                             }
 
                         }
-
                     }
                 }
-
             )
         },
         bottomBar = {
