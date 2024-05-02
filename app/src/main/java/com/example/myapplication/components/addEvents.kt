@@ -1,7 +1,6 @@
 package com.example.myapplication.components
 
 import android.Manifest
-import android.app.Activity
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
@@ -12,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,13 +20,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,22 +48,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.ApiClient
 import com.example.myapplication.Pages.userEmail
+import com.example.myapplication.Pages.userId
+import com.example.myapplication.TodoItemDao
 import com.example.myapplication.entities.BusinessEntity
+import com.example.myapplication.entities.TodoItem
+import com.example.myapplication.util.FirebaseUtil.writeToFirebase
+import com.example.myapplication.viewmodel.TodoItemViewModel
+import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.net.URLEncoder
-import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -71,12 +78,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddEvents(
     showAddEvent: MutableState<Boolean>,
-    viewModel: TodoListViewModel
+    viewModel: TodoListViewModel,
+    itemViewModel: TodoItemViewModel,
 ) {
 
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
         LocalContext.current
     )
+
 
     val request = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()
     ) {
@@ -181,7 +190,7 @@ fun AddEvents(
             })
     }
     else {
-        Dialog(onDismissRequest = {  }) {
+        Dialog(onDismissRequest = { }) {
             // Draw a rectangle shape with rounded corners inside the dialog
             Card(
                 modifier = Modifier
@@ -225,7 +234,6 @@ fun AddEvents(
 
                     }
                     if (!displayLocationPicker.value) {
-                        Log.d("enter", "1111")
                         if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                             && ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                             request.launch(arrayOf(
@@ -240,20 +248,38 @@ fun AddEvents(
 
                         DockedSearchBar(
                             query = searchLocation,
+                            leadingIcon={
+                                if (activeSuggestion) IconButton(onClick = {
+                                searchLocation = ""
+                                activeSuggestion = false
+                                suggestions.clear()
+                            }) {
+                                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Delete and disable the text input box")
+                            }},
+                            trailingIcon = {
+                                if (activeSuggestion)
+                                IconButton(onClick = {
+                                searchLocation = ""
+                                suggestions.clear()
+                            }) {
+                                Icon(Icons.Outlined.Clear, contentDescription = "Delete all contents")
+                            }},
                             onQueryChange = {
                                 searchLocation = it
                                 //suggestions.clear()
                                 if (it.isEmpty()) {
                                     activeSuggestion = false
-                                } else {
+                                }
+                                if (it.length >= 3) {
                                     if (latitude == -1.0 || longitude == -1.0) {
                                         return@DockedSearchBar
                                     }
                                     coroutineScope.launch {
-                                        Log.d("request", URLEncoder.encode(searchLocation, "UTF-8"))
-                                        ApiClient.apiService.autoCompelete("$latitude,$longitude", URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
-                                            Callback<ResponseBody> {
+
+                                            ApiClient.apiService.autoCompelete(URLEncoder.encode("$latitude,$longitude", "UTF-8"), URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="establishment").enqueue(object :
+                                                Callback<ResponseBody> {
                                                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                                    println(call.request().url())
                                                     if (response.isSuccessful) {
                                                         var resultset:MutableList<BusinessEntity> = ArrayList()
                                                         val post = response.body()?.string()
@@ -280,9 +306,9 @@ fun AddEvents(
                                                                 //Log.d("details", "onResponse: " + fullName + latitude + longitude)
                                                                 resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
                                                             }
-                                                            if (!activeSuggestion) {
-                                                                suggestions.clear()
-                                                            }
+//                                                            if (activeSuggestion) {
+//                                                                suggestions.clear()
+//                                                            }
                                                             suggestions = resultset
                                                             activeSuggestion = true
                                                         }
@@ -297,10 +323,7 @@ fun AddEvents(
                                                     // Handle failure
                                                 }
                                             }
-                                        )
-
-
-
+                                            )
                                 }
 
                             }
@@ -371,26 +394,14 @@ fun AddEvents(
                                                 ) {
                                                     // Handle failure
                                                 }
-                                            }
-                                            )
-
+                                            })
                                         }
-
                                         Log.d("placeId", placeId)
-                                    }
-
-                                )
-
-
+                                    })
                             }
-
-
-
                             }
                         }
-
                         }
-
                     }
                     Button(
                         onClick = {
@@ -411,7 +422,19 @@ fun AddEvents(
                             Text("Cancel")
                         }
                         TextButton(
-                            onClick = { writeDataToUserEvents(title, introduction, latitude, longitude, selectedDateString, selectedTimeString, isDone)
+                            onClick = {
+
+                                    writeToFirebase(
+                                        userId,
+                                        title,
+                                        introduction,
+                                        latitude,
+                                        longitude,
+                                        selectedDateString,
+                                        selectedTimeString,
+                                        isDone
+                                    )
+
                                 viewModel.fetchAndGroupTodoItems()
                                 showAddEvent.value = false},
                             modifier = Modifier.padding(8.dp),
@@ -426,44 +449,6 @@ fun AddEvents(
 }
 
 
-fun writeDataToUserEvents(
-    title: String,
-    introduction: String,
-    latitude: Double,
-    longitude: Double,
-    date: String,
-    time: String,
-    isDone: Boolean
-) {
-    val db = Firebase.firestore
 
-    val eventData = hashMapOf(
-        "title" to title,
-        "introduction" to introduction,
-        "date" to date,
-        "time" to time,
-        "isDone" to isDone,
-        "latitude" to latitude,
-        "longitude" to longitude
-    )
 
-    getUserDocumentByEmail(userEmail,
-        onSuccess = { userDocument ->
-            val userId = userDocument.documents.first().id // 获取用户文档的 ID
-            val userEventsCollection = db.collection("users").document(userId).collection("events")
-
-            userEventsCollection.add(eventData)
-                .addOnSuccessListener { documentReference ->
-                    Log.d(ContentValues.TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-                }
-                .addOnFailureListener { e ->
-                    Log.w(ContentValues.TAG, "Error adding document", e)
-
-                }
-        },
-        onFailure = { exception ->
-            Log.e(ContentValues.TAG, "Error retrieving user document", exception)
-        }
-    )
-}
 

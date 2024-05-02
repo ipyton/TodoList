@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Delete
@@ -20,49 +21,61 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.example.myapplication.MainApplication
 import com.example.myapplication.components.EditEvents
-import com.example.myapplication.components.TodoListViewModel
-import com.example.myapplication.components.getUserDocumentByEmail
 
 
 import com.example.myapplication.entities.TodoItem
+import com.example.myapplication.util.FirebaseUtil
+import com.example.myapplication.util.FirebaseUtil.deleteTodoItemFromFirebase
+import com.example.myapplication.util.FirebaseUtil.updateTodoItemInFirebase
+import com.example.myapplication.viewmodel.TodoListViewModel
+import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
-    var scheduledItems = viewModel.scheduledTodoItems
-    var selectedItems = viewModel.selectedTodoItems
+    val scheduledItems by viewModel.scheduledTodoItems.collectAsState()
+    val selectedItems by viewModel.selectedTodoItems.collectAsState()
+    var expandedItemId by remember { mutableStateOf("") }
     var showEventEdit= remember {
         mutableStateOf(false)
     }
+    val coroutineScope = rememberCoroutineScope()
 
-
-    //var selectedTodoItems = remember { mutableStateOf(mutableListOf<TodoItem>()) }
-    //var scheduledItems = remember { mutableStateOf(scheduledTodoItems.toMutableList()) }
 
     LazyColumn {
-        items(scheduledItems.value.size) { index ->
-            val todoItem = scheduledItems.value[index]
-            val isSelected = viewModel.selectedTodoItems.value.contains(todoItem)
+        items(scheduledItems) {
+            val isSelected = selectedItems.contains(it)
             var expanded by remember { mutableStateOf(false) }
             Column {
+                if (showEventEdit.value && expandedItemId == it.documentId) {
+                    EditEvents(
+                        showEditEvent = showEventEdit,
+                        viewModel = viewModel,
+                        todoItem = it
+                    )
+                }
                 ListItem(
-                    headlineContent = { Text(todoItem.title) },
-                    overlineContent = { Text(todoItem.introduction) },
-                    supportingContent = { Text(todoItem.time) },
+                    headlineContent = { Text(it.title) },
+                    overlineContent = { Text(it.introduction) },
+                    supportingContent = { Text(it.time) },
                     leadingContent = {
                         RadioButton(
                             selected = isSelected,
-                            onClick = { viewModel.toggleTodoItemSelection(todoItem)
+                            onClick = { viewModel.toggleTodoItemSelection(it)
 
-                                isVisible.value = selectedItems.value.isNotEmpty()
-                                Log.d("RadioButtonClicked", "RadioButton clicked for TodoItem: ${todoItem.title}")
+                                isVisible.value = selectedItems.isNotEmpty()
+                                //Log.d("RadioButtonClicked", "RadioButton clicked for TodoItem: ${todoItem.title}")
                                 //Log.d("SelectedTodoItems", "Selected Todo Items: ${selectedTodoItems}, TodoItem: ${todoItem.title}")
                                 //Log.d("IsEmpty", "isEmpty in Scheduled: ${selectedTodoItems.value.isNotEmpty()}")
 
@@ -75,7 +88,7 @@ fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
                     trailingContent = {
                         IconButton(onClick = {
                             expanded = true
-
+                            expandedItemId = it.documentId
                         }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "change status") }
                         DropdownMenu(
@@ -85,10 +98,13 @@ fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
                             DropdownMenuItem(
                                 text = { Text("Delete") },
                                 onClick = {
-                                    //Log.d("TodoItems", "Todo Items before deletion: $todoItems")
-                                    deleteTodoItemFromFirebase(todoItem.documentId)
-                                    scheduledItems.value = scheduledItems.value.toMutableList().apply {
-                                        removeAll { it.documentId == todoItem.documentId }
+                                    coroutineScope.launch {
+                                        //Log.d("TodoItems", "Todo Items before deletion: $todoItems")
+                                        expandedItemId = ""
+                                        deleteTodoItemFromFirebase(userId, it.documentId) {
+                                            viewModel.fetchAndGroupTodoItems()
+                                        }
+                                        expanded = false
                                     }
 
                                     //Log.d("TodoItems", "Todo Items after deletion: $todoItems")
@@ -103,23 +119,16 @@ fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
                             DropdownMenuItem(
                                 text = { Text("edit") },
                                 onClick = {
-                                    //expanded = false
 
                                     showEventEdit.value = true
-                                    },
+                                    expanded = false
+                                },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.Edit,
                                         contentDescription = null
                                     )
                                 })
-                            if(showEventEdit.value) {
-                                EditEvents(
-                                    showEditEvent = showEventEdit,
-                                    viewModel = viewModel,
-                                    todoItem = todoItem
-                                )
-                            }
 
                         }
                     }
@@ -130,61 +139,4 @@ fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
     }
 }
 
-fun deleteTodoItemFromFirebase(documentId: String) {
-    getUserDocumentByEmail(
-        userEmail,
-        onSuccess = { userResult ->
-            val userDocumentRef = userResult.documents[0].reference
 
-            userDocumentRef.collection("events").document(documentId).delete()
-                .addOnSuccessListener {
-                    Log.d("FirebaseDelete", "DocumentSnapshot successfully deleted!")
-                }
-                .addOnFailureListener { e ->
-                    Log.w("FirebaseDelete", "Error deleting document", e)
-                }
-        },
-        onFailure = { exception ->
-            Log.e("FirebaseDelete", "Failed to fetch user document", exception)
-        }
-    )
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun deleteSelectedTodoItemsFromFirebase(selectedItemsState: MutableState<List<TodoItem>>) {
-    val selectedItems: List<TodoItem> = selectedItemsState.value
-    for (todoItem in selectedItems) {
-        deleteTodoItemFromFirebase(todoItem.documentId)
-    }
-
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun markSelectedTodoItemsAsDone(selectedItemsState: MutableState<List<TodoItem>>) {
-    val selectedItems: List<TodoItem> = selectedItemsState.value
-    for (todoItem in selectedItems) {
-        todoItem.isDone = true
-        updateTodoItemInFirebase(todoItem)
-    }
-
-}
-
-fun updateTodoItemInFirebase(todoItem: TodoItem) {
-    getUserDocumentByEmail(
-        userEmail,
-        onSuccess = { userResult ->
-            val userDocumentRef = userResult.documents[0].reference
-            userDocumentRef.collection("events").document(todoItem.documentId)
-                .update("isDone", true)
-                .addOnSuccessListener {
-                    Log.d("FirebaseUpdate", "DocumentSnapshot successfully updated!")
-                }
-                .addOnFailureListener { e ->
-                    Log.w("FirebaseUpdate", "Error updating document", e)
-                }
-        },
-        onFailure = { exception ->
-            Log.e("FirebaseUpdate", "Failed to fetch user document", exception)
-        }
-    )
-}

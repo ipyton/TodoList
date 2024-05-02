@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.devtools.ksp")
+
 
 }
 
@@ -98,6 +100,9 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation ("com.google.maps.android:maps-compose-utils:4.3.3")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+   // implementation("androidx.compose.ui:ui-text-google-fonts:1.6.1")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
 
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -115,6 +120,12 @@ dependencies {
     implementation ("androidx.credentials:credentials:1.2.1")
     implementation ("androidx.credentials:credentials-play-services-auth:1.2.1")
     implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.1")
+
 
 
 
