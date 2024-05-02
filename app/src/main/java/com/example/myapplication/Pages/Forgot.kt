@@ -64,7 +64,7 @@ fun ForgetPageOne(navController: NavHostController, login: MutableState<Boolean>
 
         TextField(value = username,
             onValueChange = { username = it },
-            label = {Text(text = "Username")},
+            label = {Text(text = "User Email")},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp))

@@ -3,6 +3,22 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+
+}
+
+secrets {
+    // Optionally specify a different file name containing your secrets.
+    // The plugin defaults to "local.properties"
+    propertiesFileName = "secrets.properties"
+
+    // A properties file containing default secret values. This file can be
+    // checked in version control.
+    defaultPropertiesFileName = "local.defaults.properties"
+
+    // Configure which keys should be ignored by the plugin by providing regular expressions.
+    // "sdk.dir" is ignored by default.
+    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
+    ignoreList.add("sdk.*")       // Ignore all keys matching the regexp "sdk.*"
 }
 
 android {
@@ -61,7 +77,7 @@ dependencies {
     //implementation("com.google.android.libraries.maps:maps:3.1.0-beta")
 //    implementation("androidx.compose.material3:material3-android:1.2.1")
     val nav_version = "2.7.7"
-    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+    //implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
 
     implementation("com.google.firebase:firebase-database")
     implementation("androidx.core:core-ktx:1.12.0")
@@ -81,6 +97,16 @@ dependencies {
 //    implementation("com.google.android.gms:play-services-maps:21.2.0")
     implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation ("com.google.maps.android:maps-compose-utils:4.3.3")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+   // implementation("androidx.compose.ui:ui-text-google-fonts:1.6.1")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+
     //google credential
 //    implementation("androidx.credentials:credentials:1.3.0-alpha01")
 
@@ -99,6 +125,8 @@ dependencies {
     implementation ("com.google.maps.android:maps-compose-widgets:4.3.3")
     //implementation("com.android.volley:volley:1.1.0")
     implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.maps.android:places-ktx:3.1.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
