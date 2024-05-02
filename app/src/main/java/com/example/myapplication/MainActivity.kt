@@ -96,6 +96,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import kotlin.math.max
 
 
@@ -280,6 +281,7 @@ fun ScaffoldExample(
     isVisible: MutableState<Boolean>,
     googleAuthUiClient: GoogleAuthUIClient,
 ) {
+    val currentDate = LocalDate.now()
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Today", "Scheduled", "Done", "Location", "Account")
