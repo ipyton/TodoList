@@ -21,11 +21,15 @@ class GoogleAuthUIClient(private val context: Context,
     private fun buildSignInRequest(): BeginSignInRequest {
         //context.getString(R.string.web_client_id)
         return BeginSignInRequest.Builder()
+            .setPasswordRequestOptions(
+                BeginSignInRequest.PasswordRequestOptions.builder()
+                    .setSupported(true)
+                    .build())
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com") //context.getString(R.string.web_client_id)
+                    .setServerClientId("467501865267-uigmi4qr0933hvr63at079hd748oa9n7.apps.googleusercontent.com\n") //context.getString(R.string.web_client_id)
                     .build()
             )
             .setAutoSelectEnabled(false)
