@@ -1,7 +1,6 @@
 package com.example.myapplication.components
 
 import android.Manifest
-import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
 import android.util.Log
@@ -22,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,20 +47,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import com.example.myapplication.ApiClient
-import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.Pages.userId
-import com.example.myapplication.TodoItemDao
 import com.example.myapplication.entities.BusinessEntity
-import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil.writeToFirebase
-import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
@@ -79,7 +69,6 @@ import java.time.format.DateTimeFormatter
 fun AddEvents(
     showAddEvent: MutableState<Boolean>,
     viewModel: TodoListViewModel,
-    itemViewModel: TodoItemViewModel,
 ) {
 
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
@@ -163,9 +152,7 @@ fun AddEvents(
     var coroutineScope = rememberCoroutineScope()
 
     var eventPlace = remember {
-
         mutableStateOf(BusinessEntity("",1.0,1.0,""))
-
     }
 
 
@@ -275,7 +262,6 @@ fun AddEvents(
                                         return@DockedSearchBar
                                     }
                                     coroutineScope.launch {
-
                                             ApiClient.apiService.autoCompelete(URLEncoder.encode("$latitude,$longitude", "UTF-8"), URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="establishment").enqueue(object :
                                                 Callback<ResponseBody> {
                                                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
@@ -357,9 +343,8 @@ fun AddEvents(
                                         searchLocation = get.formattedAddress
                                         activeSuggestion = false
                                         coroutineScope.launch {
-                                            val target = get
                                             ApiClient.apiService.getDetails(
-                                                target.locationId,
+                                                get.locationId,
                                                 "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok"
                                             ).enqueue(object :
                                                 Callback<ResponseBody> {
@@ -372,15 +357,17 @@ fun AddEvents(
                                                         if (post != null) {
                                                             Log.d("search result", post)
                                                             val jsonObj = JSONObject(post)
-                                                            target.latitude =
-                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                            get.latitude =
+                                                                jsonObj.getJSONObject("result")
+                                                                    .getJSONObject("geometry")
                                                                     .getJSONObject("location")
                                                                     .getDouble("lat")
-                                                            target.longitude =
-                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                            get.longitude =
+                                                                jsonObj.getJSONObject("result")
+                                                                    .getJSONObject("geometry")
                                                                     .getJSONObject("location")
                                                                     .getDouble("lng")
-                                                            eventPlace.value = target
+                                                            eventPlace.value = get
                                                         }
 
                                                     } else {
@@ -428,8 +415,8 @@ fun AddEvents(
                                         userId,
                                         title,
                                         introduction,
-                                        latitude,
-                                        longitude,
+                                        if(displayLocationPicker.value) { latitude}else{eventPlace.value.latitude},
+                                        if(displayLocationPicker.value) { longitude}else{eventPlace.value.longitude},
                                         selectedDateString,
                                         selectedTimeString,
                                         isDone

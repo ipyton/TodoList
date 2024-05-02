@@ -15,7 +15,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 @Composable
 fun PieChartScreen(future:MutableState<Int>, done:MutableState<Int>, missed:MutableState<Int>, today: MutableState<Int>) {
-    val sum = future.value + done.value + missed.value
+    val sum = future.value + done.value + missed.value + today.value
 
     val pieEntries = listOf(
         PieEntry(future.value.toFloat()/sum.toFloat()  * 100, "Future"),

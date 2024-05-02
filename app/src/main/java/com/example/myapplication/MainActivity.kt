@@ -110,8 +110,7 @@ class MainActivity : ComponentActivity() {
         .setCredentialOptions(listOf(googleIdOption))
         .build()
 
-    //val db = Firebase.firestore
-    val todoListViewModel = TodoListViewModel()
+
 
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -232,8 +231,8 @@ fun MyNavigator(navController: NavHostController,
             Scheduled(isVisible = isVisible, viewModel = todoListViewModel)
         }
         composable("Done") { Done(isVisible = isVisible, viewModel = todoListViewModel) }
-        composable("Location") { Location() }
-        composable("Account") { Account(navController, login=login) }
+        composable("Location") { Location(viewModel = todoListViewModel) }
+        composable("Account") { Account(navController, login=login, viewModel=todoListViewModel) }
     }
 }
 
@@ -289,8 +288,7 @@ fun ScaffoldExample(
     val done : ComposableFun = {  Icon(Icons.Filled.CheckCircle, contentDescription = "Done")}
     val today : ComposableFun = { Icon(Icons.Rounded.Notifications, contentDescription = "today") }
     val navController = rememberNavController()
-    val todoListViewModel = remember { TodoListViewModel() }
-    val todoItemViewModel = remember { TodoItemViewModel() }
+    val todoListViewModel = TodoListViewModel()
     val selectedTodoItems by todoListViewModel.selectedTodoItems.collectAsState()
 
 
@@ -305,12 +303,11 @@ fun ScaffoldExample(
     }
 
 
-    val viewModel = remember { todoListViewModel }
     val coroutineScope = rememberCoroutineScope()
 
 
-    LaunchedEffect(viewModel) {
-        viewModel.fetchAndGroupTodoItems()
+    LaunchedEffect(todoListViewModel) {
+        todoListViewModel.fetchAndGroupTodoItems()
     }
 
     Scaffold(
@@ -328,7 +325,7 @@ fun ScaffoldExample(
                         if (items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
                             IconButton(onClick = {
                                 coroutineScope.launch {
-                                    markSelectedTodoItemsAsDone(selectedTodoItems, viewModel)
+                                    markSelectedTodoItemsAsDone(selectedTodoItems, todoListViewModel)
                                     isVisible.value = false
                                 }
                             }) {
@@ -387,7 +384,7 @@ fun ScaffoldExample(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (showEventAdder.value) {
-                AddEvents(showEventAdder, viewModel, todoItemViewModel)
+                AddEvents(showEventAdder, todoListViewModel)
             }
             MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient,todoListViewModel = todoListViewModel
             )

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.Pages.userEmail
@@ -25,8 +26,11 @@ import java.time.format.DateTimeParseException
 
 
 class TodoListViewModel : ViewModel() {
-    private val todayTodoItemsFlow = MutableStateFlow(listOf<TodoItem>())
+
+    private val todayTodoItemsFlow = MutableStateFlow(listOf<TodoItem>(TodoItem(),TodoItem()))
     val todayTodoItems = todayTodoItemsFlow.asStateFlow()
+    private val a :MutableLiveData<MutableList<TodoItem>> = MutableLiveData()
+
 
     private val scheduledTodoItemsFlow = MutableStateFlow(listOf<TodoItem>())
     val scheduledTodoItems = scheduledTodoItemsFlow.asStateFlow()
@@ -43,9 +47,9 @@ class TodoListViewModel : ViewModel() {
 
         getAllTodoItemsFromFirebase(userId) { todoItems ->
             val groupedTodoItems = groupTodoItemsByDate(todoItems)
-            todayTodoItemsFlow.update { groupedTodoItems["Today"] ?: emptyList() }
-            scheduledTodoItemsFlow.update { groupedTodoItems["Scheduled"] ?: emptyList() }
-            doneTodoItemsFlow.update { groupedTodoItems["Done"] ?: emptyList() }
+            todayTodoItemsFlow.update { groupedTodoItems["Today"]?.toList() ?: emptyList() }
+            scheduledTodoItemsFlow.update { groupedTodoItems["Scheduled"]?.toList() ?: emptyList() }
+            doneTodoItemsFlow.update { groupedTodoItems["Done"]?.toList()?: emptyList() }
         }
         /*Log.d("TodoListViewModel", "Today Todo Items: ${todayTodoItems.value}")
         Log.d("TodoListViewModel", "Scheduled Todo Items: ${scheduledTodoItems.value}")

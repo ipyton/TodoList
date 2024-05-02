@@ -50,11 +50,11 @@ fun isMissed(date:String, time:String):Boolean{
 }
 
 @Composable
-fun Account(navController: NavHostController, login: MutableState<Boolean>,todolistViewModel: TodoListViewModel = viewModel()) {
+fun Account(navController: NavHostController, login: MutableState<Boolean>,viewModel: TodoListViewModel = viewModel()) {
 
-    val scheduled by todolistViewModel.scheduledTodoItems.collectAsState()
-    val today by todolistViewModel.todayTodoItems.collectAsState()
-    val done by todolistViewModel.doneTodoItems.collectAsState()
+    val scheduled by viewModel.scheduledTodoItems.collectAsState()
+    val today by viewModel.todayTodoItems.collectAsState()
+    val done by viewModel.doneTodoItems.collectAsState()
 
     val missed = remember {
         mutableIntStateOf(0)
@@ -78,9 +78,9 @@ fun Account(navController: NavHostController, login: MutableState<Boolean>,todol
         }
     }
     println(missed.intValue)
-    println(todolistViewModel.scheduledTodoItems.collectAsState().value.size)
+    println(viewModel.scheduledTodoItems.collectAsState().value.size)
     println(undoAmount.intValue)
-    println(todolistViewModel.todayTodoItems.collectAsState().value.size)
+    println(viewModel.todayTodoItems.collectAsState().value.size)
 
     println(todayAmount.intValue)
     println(doneAmount.intValue)

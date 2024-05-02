@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,7 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.entities.EventEntity
+import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -40,11 +43,13 @@ private fun getLocationPermission() {
 
 
 @Composable
-fun Location() {
+fun Location(viewModel: TodoListViewModel = viewModel()) {
     val singapore = LatLng(1.35, 103.87)
-    var list : Array<EventEntity> = emptyArray<EventEntity>()
+    val todayItems = viewModel.todayTodoItems.collectAsState()
+    val scheduledItems = viewModel.scheduledTodoItems.collectAsState()
+    val list = todayItems.value + scheduledItems.value
 
-    list = list.plus(EventEntity(1.35,103.87, "helllo", "good bye"))
+
     var currentLat = remember{
         mutableDoubleStateOf(-1.0)
     }
@@ -163,11 +168,11 @@ fun Location() {
 //                icon = BitmapDescriptorFactory.
 //            )
 //        }
-            list.forEach {
+            todayItems.value.forEach {
                 run{
                     Marker (
                         state = MarkerState(position = LatLng(it.latitude,it.longitude)),
-                        title = it.title,
+                        title = it.title + it.date + it.time,
                         snippet = it.introduction
                     )
                 }
