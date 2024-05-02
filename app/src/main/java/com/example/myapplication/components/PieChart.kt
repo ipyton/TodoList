@@ -14,13 +14,14 @@ import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 @Composable
-fun PieChartScreen(future:MutableState<Int>, done:MutableState<Int>, missed:MutableState<Int>) {
+fun PieChartScreen(future:MutableState<Int>, done:MutableState<Int>, missed:MutableState<Int>, today: MutableState<Int>) {
     val sum = future.value + done.value + missed.value
 
     val pieEntries = listOf(
         PieEntry(future.value.toFloat()/sum.toFloat()  * 100, "Future"),
         PieEntry(done.value.toFloat()/sum.toFloat() * 100, "Done"),
         PieEntry(missed.value.toFloat()/sum.toFloat() * 100, "Missed"),
+        PieEntry(today.value.toFloat()/sum.toFloat() * 100, "Today"),
     )
     val pieDataSet = PieDataSet(pieEntries, "")
     pieDataSet.colors = ColorTemplate.COLORFUL_COLORS.toList()
@@ -38,7 +39,7 @@ fun PieChartScreen(future:MutableState<Int>, done:MutableState<Int>, missed:Muta
             PieChart(context).apply {
                 data = pieData
                 description.isEnabled = false
-                centerText = "Statics about your todo list."
+                centerText = "Statics about your progress"
                 setDrawCenterText(true)
                 setEntryLabelTextSize(12f)
                 animateY(300)

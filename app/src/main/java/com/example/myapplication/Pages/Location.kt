@@ -43,6 +43,7 @@ private fun getLocationPermission() {
 fun Location() {
     val singapore = LatLng(1.35, 103.87)
     var list : Array<EventEntity> = emptyArray<EventEntity>()
+
     list = list.plus(EventEntity(1.35,103.87, "helllo", "good bye"))
     var currentLat = remember{
         mutableDoubleStateOf(-1.0)

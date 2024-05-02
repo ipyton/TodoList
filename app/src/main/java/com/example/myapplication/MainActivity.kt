@@ -71,7 +71,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
 import com.example.myapplication.Pages.ForgetPageOne
@@ -177,9 +176,7 @@ fun mainStage(
     loginState: MutableState<Boolean>,
     launcher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>,
     googleAuthUiClient: GoogleAuthUIClient,
-
 ) {
-
 
     val userName = remember {
         mutableStateOf("")

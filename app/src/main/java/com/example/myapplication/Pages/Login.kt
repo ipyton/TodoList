@@ -105,7 +105,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.myapplication.R
 import com.example.myapplication.util.GoogleAuthUIClient
-import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.example.myapplication.viewmodel.SignInViewModel
@@ -126,7 +125,7 @@ var userId :String = ""
 
 
 
-fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth): Unit {
+fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth, login:MutableState<Boolean>): Unit {
 
     // Handle the successfully returned credential.
     val credential = result.credential
@@ -151,7 +150,16 @@ fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth): Unit {
                         .createFrom(credential.data)
                     auth.signInWithCredential(GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)).
                     addOnCanceledListener { println("canceled") }.
-                    addOnCompleteListener {   auth.currentUser?.uid }.
+                    addOnCompleteListener {
+                        println(googleIdTokenCredential.id)
+                        println(googleIdTokenCredential.idToken)
+                        userEmail = googleIdTokenCredential.id
+                        userId = googleIdTokenCredential.idToken
+                        login.value = true
+                        com.google.firebase.Firebase.firestore.collection("users")
+                            .document(googleIdTokenCredential.idToken)
+                            .set(mapOf("email" to googleIdTokenCredential.id))
+                    }.
                     addOnFailureListener { println(it) }
                 } catch (e: GoogleIdTokenParsingException) {
                     Log.e("Login error", "Received an invalid google id token response", e)
@@ -182,7 +190,7 @@ fun Login(
     var surname by remember { mutableStateOf ("") }
     val current = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val auth = Firebase.auth
+    val auth = com.google.firebase.Firebase.auth
     val rainbowColors = listOf(White, Magenta,  Blue, Cyan)
 
     var selectorOpened = remember {
@@ -195,7 +203,6 @@ fun Login(
     val credentialManager = CredentialManager.create(LocalContext.current)
     val gradientColors = listOf(Cyan, White /*...*/)
     AndroidView(
-
         factory = { context ->
             VideoView(context).apply {
                 setVideoPath("android.resource://${context.packageName}/${R.raw.output}")
@@ -231,166 +238,31 @@ fun Login(
 
                 }
             }
-        }
+        })
 
-    )
-    if (false) {
-        Scaffold(
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
-            },
-        )
-        { contentPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(contentPadding),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Row (modifier=Modifier.fillMaxWidth().padding(top=40.dp), horizontalArrangement = Arrangement.Center){
-                    Text(text = "Login",
-                        style = TextStyle(
-                            brush = Brush.linearGradient(
-                                colors = rainbowColors
-                            )
-                        ),            fontSize = 50.sp
-                    )
-                }
-                Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color.White.copy(alpha = 0.5f))
-                            .padding(8.dp)
-                    ) {
-                        TextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text("User Email") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        )
-                    }
-
-                }
-                Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    OutlinedTextField(
-                        value = surname,
-                        onValueChange = { surname = it },
-                        label = { Text("Password") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )}
-                Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    Button(onClick = { login.value = true
-                    }) {
-                        Text("Login")
-                    }
-                    Button(onClick = { navController.navigate("forgetOne") }) {
-                        Text("Forget")
-                    }
-                }
-                Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    Button(onClick = { navController.navigate("registrationOne")
-                        Log.d("MainActivity","world")}) {
-                        Text("Registration")
-                    }
-                }
-                Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    TextButton(
-                        onClick = {
-//                    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-//                        .setFilterByAuthorizedAccounts(false)
-//                        .setServerClientId("467501865267-uigmi4qr0933hvr63at079hd748oa9n7.apps.googleusercontent.com")
-//                        .build()
-                            val getPasswordOption = GetPasswordOption()
-                            val getGoogleIdOption = GetGoogleIdOption("467501865267-uigmi4qr0933hvr63at079hd748oa9n7.apps.googleusercontent.com")
-                            //startActivityForResult(current.startActivity(), Intent(Settings.ACTION_ADD_ACCOUNT),1,ActivityOptionsCompat.makeBasic())
-
-                            val getCredRequest = GetCredentialRequest(
-                                listOf(getPasswordOption, getGoogleIdOption)
-                            )
-                            if (getCredRequest.credentialOptions.isEmpty()) {
-                                println("empty")
-                                coroutineScope.launch {
-                                    println("print no credentials ")
-                                    val result = snackbarHostState
-                                        .showSnackbar(
-                                            message = "Snackbar",
-                                            actionLabel = "Action",
-                                            // Defaults to SnackbarDuration.Short
-                                            duration = SnackbarDuration.Short
-                                        )
-                                }
-                            }else {
-                                coroutineScope.launch {
-                                    try {
-                                        val result = credentialManager.getCredential(
-                                            // Use an activity-based context to avoid undefined system UI
-                                            // launching behavior.
-                                            context = current,
-                                            request = getCredRequest
-                                        )
-                                        handleSignIn(result, auth)
-                                    } catch (e : GetCredentialException) {
-
-                                    }
-
-
-                                }
-                                Log.d("click", "click")
-
-
-                            }
-
-//// Get passkey from the user's public key credential provider.
-//                    val getPublicKeyCredentialOption = GetPublicKeyCredentialOption(
-//                        requestJson = requestJson
-//                    )
-
-                        },
-                        modifier = Modifier
-                            .size(width = 210.dp, height = 60.dp)
-                            .border(0.dp, Color.Transparent)
-                            .padding(0.dp),
-                        border = BorderStroke(width = 0.dp, Color.White),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.signup),
-                            contentDescription = "sign in with google",
-                            modifier = Modifier
-                                .size(200.dp)
-                                .border(0.dp, Transparent)
-                                .padding(0.dp),
-                        )
-                    }
-                }
-                SnackbarHost(hostState = snackbarHostState)
-
-            }
-
-        }
-    }
-    else {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
         ) {
-            Row (modifier=Modifier.fillMaxWidth().padding(top=240.dp), horizontalArrangement = Arrangement.Center){
-                Text(text = "Welcome to Todo List!",
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 240.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Welcome to Todo List!",
 
                     style = TextStyle(
                         brush = Brush.linearGradient(
                             colors = rainbowColors
                         )
-                    ),fontSize = 35.sp, fontFamily = FontFamily.Cursive)
+                    ), fontSize = 35.sp, fontFamily = FontFamily.Cursive
+                )
 
             }
-            Row (modifier=Modifier.fillMaxWidth().padding(top=40.dp, bottom = 30.dp), horizontalArrangement = Arrangement.Center){
-
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 40.dp, bottom = 30.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 TextField(
                     value = name,
                     onValueChange = { name = it },
@@ -398,165 +270,166 @@ fun Login(
                     modifier = Modifier
                         .width(300.dp),
                     shape = RoundedCornerShape(12.dp)
-
                 )
-
-                }
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
 
                 TextField(
-                   value = surname,
-                onValueChange = { surname = it },
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-
+                    value = surname,
+                    onValueChange = { surname = it },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier
+                        .width(300.dp),
+                    shape = RoundedCornerShape(12.dp)
                 )
-
             }
-
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
-                TextButton(onClick = { navController.navigate("forgetOne") }, modifier = Modifier.padding(end = 30.dp)) {
-                    Text("Forget Your Password?", style = TextStyle(
-                        brush = Brush.linearGradient(
-                            colors = gradientColors
-                        )
-                    ),
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(
+                    onClick = { navController.navigate("forgetOne") },
+                    modifier = Modifier.padding(end = 30.dp)
+                ) {
+                    Text(
+                        "Forget Your Password?", style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        ),
                         textDecoration = TextDecoration.Underline
                     )
                 }
             }
-                    Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-            Button(onClick = {
-                if (name.isEmpty() || surname.isEmpty())
-                {
-                    Toast.makeText(
-                        context,
-                        "Email and password can not be empty.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
-                else
-                {
-                    Firebase.auth.signInWithEmailAndPassword(name, surname)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful)
-                            {
-                                Log.d(TAG, "signInWithEmail:success")
-                                val user = Firebase.auth.currentUser
-                                userId = Firebase.auth.currentUser?.uid ?:"defaultUserId"
-                                val email = user?.email
-                                if (email != null)
-                                {
-                                    userEmail = email
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Button(onClick = {
+                    if (name.isEmpty() || surname.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            "Email and password can not be empty.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    } else {
+                        com.google.firebase.Firebase.auth.signInWithEmailAndPassword(name, surname)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    Log.d(TAG, "signInWithEmail:success")
+                                    val user = com.google.firebase.Firebase.auth.currentUser
+                                    userId = com.google.firebase.Firebase.auth.currentUser?.uid ?: "defaultUserId"
+                                    val email = user?.email
+                                    if (email != null) {
+                                        userEmail = email
 
+                                    }
+                                    Log.d(userEmail, "userEmail:${userEmail}")
+                                    login.value = true
+                                    user?.email?.let { userEmail ->
+                                        com.google.firebase.Firebase.firestore.collection("users")
+                                            .document(user.uid)
+                                            .set(mapOf("email" to userEmail))
+                                            .addOnSuccessListener {
+                                                Log.d(TAG, "DocumentSnapshot successfully written!")
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Log.w(TAG, "Error writing document", e)
+                                            }
+                                    }
+                                } else {
+                                    Log.w(TAG, "signInWithEmail:failure", task.exception)
+                                    Toast.makeText(
+                                        context,
+                                        "Password does not match email.",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                                 }
-                                Log.d(userEmail, "userEmail:${userEmail}")
-                                login.value = true
-                                user?.email?.let { userEmail ->
-                                    Firebase.firestore.collection("users")
-                                        .document(user.uid)
-                                        .set(mapOf("email" to userEmail))
-                                        .addOnSuccessListener {
-                                            Log.d(TAG, "DocumentSnapshot successfully written!")
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Log.w(TAG, "Error writing document", e)
-                                        }
-                                }
-                            }
-                            else
-                            {
-                                Log.w(TAG, "signInWithEmail:failure", task.exception)
-                                Toast.makeText(
-                                    context,
-                                    "Password does not match email.",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            }
 
-                        }
+                            }
+                    }
+                }) {
+                    Text("Login")
                 }
-            }) {
-                Text("Login")}
-
-            Row (modifier=Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.Center){
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 val launcher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.StartIntentSenderForResult(),
                     onResult = { result ->
-                        if(result.resultCode == RESULT_OK) {
+                        if (result.resultCode == RESULT_OK) {
                             coroutineScope.launch {
                                 val signInResult = googleAuthUiClient.signInWithIntent(
                                     intent = result.data ?: return@launch
                                 )
-                                println(signInResult.errorMessage)
-                                println(signInResult.data?.userId)
-                                println(signInResult.data?.username)
-                                println(signInResult.data?.profilePictureUrl)
                             }
-                        }
-                        else {
+                        } else {
                             println(result.resultCode)
                         }
                     }
                 )
                 TextButton(
                     onClick = {
-//                    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-//                        .setFilterByAuthorizedAccounts(false)
-//                        .setServerClientId("467501865267-uigmi4qr0933hvr63at079hd748oa9n7.apps.googleusercontent.com")
-//                        .build()
-                        //val getPasswordOption = GetPasswordOption()
-                        val getGoogleIdOption = GetGoogleIdOption.Builder().setFilterByAuthorizedAccounts(false).setAutoSelectEnabled(false).setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com").build()
-                        val request: GetCredentialRequest = GetCredentialRequest.Builder().addCredentialOption(getGoogleIdOption).build()
+
+                        val getGoogleIdOption =
+                            GetGoogleIdOption.Builder().setFilterByAuthorizedAccounts(true)
+                                .setAutoSelectEnabled(false)
+                                .setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com")
+
+                        var request: GetCredentialRequest = GetCredentialRequest.Builder().setPreferImmediatelyAvailableCredentials(true)
+                            .addCredentialOption(getGoogleIdOption.build()).build()
                         coroutineScope.launch {
-                        try {
-                            val result = credentialManager.getCredential(
-                                request = request,
-                                context = current,
-                            )
-                            handleSignIn(result,auth)
-
-                        } catch (e:NoCredentialException){
-                            val barResult = snackbarHostState
-                                .showSnackbar(
-                                    message = "You don't have a google account, do you want to add?",
-                                    actionLabel = "Add",
-                                    // Defaults to SnackbarDuration.Short
-                                    duration = SnackbarDuration.Short
+                            try {
+                                val result = credentialManager.getCredential(
+                                    request = request,
+                                    context = current,
                                 )
-                            when (barResult) {
-                                SnackbarResult.ActionPerformed -> {
-                                    val intent = Intent(Settings.ACTION_ADD_ACCOUNT)
-                                    intent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
-                                    current.startActivity(intent)
-                                    //startActivityForResult(current.startActivity(), Intent(Settings.ACTION_ADD_ACCOUNT),1,ActivityOptionsCompat.makeBasic())
+
+                                handleSignIn(result, auth,login)
+
+                            } catch (e: NoCredentialException) {
+                                try {
+                                    request = GetCredentialRequest.Builder()
+                                        .addCredentialOption(getGoogleIdOption.setFilterByAuthorizedAccounts(false).build()).build()
+                                    credentialManager.getCredential(
+                                        request = request,
+                                        context = current,
+                                    )
+                                } catch(e:NoCredentialException) {
+                                    val barResult = snackbarHostState
+                                        .showSnackbar(
+                                            message = "You don't have a google account, do you want to add?",
+                                            actionLabel = "Add",
+                                            // Defaults to SnackbarDuration.Short
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    when (barResult) {
+                                        SnackbarResult.ActionPerformed -> {
+                                            val intent = Intent(Settings.ACTION_ADD_ACCOUNT)
+                                            intent.putExtra(
+                                                Settings.EXTRA_ACCOUNT_TYPES,
+                                                arrayOf("com.google")
+                                            )
+                                            current.startActivity(intent)
+                                        }
+
+                                        SnackbarResult.Dismissed -> {
+                                            /* Handle snackbar dismissed */
+                                        }
+                                    }
+                                }
 
 
-                                }
-                                SnackbarResult.Dismissed -> {
-                                    /* Handle snackbar dismissed */
-                                }
+
+                            } catch (err: Exception) {
+                                println(err)
+                                val barResult = snackbarHostState
+                                    .showSnackbar(
+                                        message = "Unknown error, please ask for developer!",
+                                        actionLabel = "dismiss",
+                                        // Defaults to SnackbarDuration.Short
+                                        duration = SnackbarDuration.Short
+                                    )
                             }
-
-                        } catch (err: Exception) {
-                            val barResult = snackbarHostState
-                                .showSnackbar(
-                                    message = "Unknown error, please ask for developer!",
-                                    actionLabel = "dismiss",
-                                    // Defaults to SnackbarDuration.Short
-                                    duration = SnackbarDuration.Short
-                                )
-
                         }
-
-
-                          }
-
-
                     },
                     modifier = Modifier
                         .size(width = 210.dp, height = 60.dp)
@@ -575,24 +448,32 @@ fun Login(
                     )
                 }
             }
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                TextButton(onClick = { navController.navigate("registrationOne")
-                  }) {
-                    Text("Want to create an account?", style = TextStyle(
-                        brush = Brush.linearGradient(
-                            colors = gradientColors
-                        )
-                    ),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                TextButton(onClick = {
+                    navController.navigate("registrationOne")
+                }) {
+                    Text(
+                        "Want to create an account?",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        ),
                         textDecoration = TextDecoration.Underline,
                     )
                 }
             }
-            Spacer(Modifier.weight(1f).fillMaxHeight().background(Color.Green))
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.End))
+            Spacer(Modifier.weight(1f).fillMaxHeight())
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.End))
 
+            }
         }
-    }
 
 
-}
+
 
