@@ -2,10 +2,12 @@ package com.example.myapplication.Pages
 
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.graphics.Matrix
 import android.os.Build
 import android.provider.Settings
 import android.service.credentials.BeginGetCredentialRequest
 import android.util.Log
+import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,13 +17,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
@@ -37,6 +43,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -47,11 +54,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Blue
+import androidx.compose.ui.graphics.Color.Companion.Cyan
+import androidx.compose.ui.graphics.Color.Companion.Green
+import androidx.compose.ui.graphics.Color.Companion.Magenta
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.Color.Companion.Yellow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.app.ActivityOptionsCompat
@@ -80,8 +102,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
-
-
+import kotlin.math.max
 
 
 fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth): Unit {
@@ -141,90 +162,58 @@ fun Login(
     val current = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val auth = Firebase.auth
-
+    val rainbowColors = listOf(White, Magenta,  Blue, Cyan)
 
     var selectorOpened = remember {
         mutableStateOf(false)
     }
-//    val viewModel: SignInViewModel by viewModels()
-
-    //val googleAuthUiClient by lazy{ GoogleAuthUIClient(context= LocalContext.current, Identity.getSignInClient(applicationContext)) }
-
     var coroutineScope = rememberCoroutineScope()
     val credentialManager = CredentialManager.create(LocalContext.current)
+    val gradientColors = listOf(Cyan, White /*...*/)
+    AndroidView(
 
-    val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(
-        // Contains the request in JSON format. Uses the standard WebAuthn
-        // web JSON spec.
-        requestJson = "{\n" +
-                "  \"challenge\": \"abc123\",\n" +
-                "  \"rp\": {\n" +
-                "    \"name\": \"Credential Manager example\",\n" +
-                "    \"id\": \"credential-manager-test.example.com\"\n" +
-                "  },\n" +
-                "  \"user\": {\n" +
-                "    \"id\": \"def456\",\n" +
-                "    \"name\": \"helloandroid@gmail.com\",\n" +
-                "    \"displayName\": \"helloandroid@gmail.com\"\n" +
-                "  },\n" +
-                "  \"pubKeyCredParams\": [\n" +
-                "    {\n" +
-                "      \"type\": \"public-key\",\n" +
-                "      \"alg\": -7\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"type\": \"public-key\",\n" +
-                "      \"alg\": -257\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"timeout\": 1800000,\n" +
-                "  \"attestation\": \"none\",\n" +
-                "  \"excludeCredentials\": [\n" +
-                "    {\"id\": \"ghi789\", \"type\": \"public-key\"},\n" +
-                "    {\"id\": \"jkl012\", \"type\": \"public-key\"}\n" +
-                "  ],\n" +
-                "  \"authenticatorSelection\": {\n" +
-                "    \"authenticatorAttachment\": \"platform\",\n" +
-                "    \"requireResidentKey\": true,\n" +
-                "    \"residentKey\": \"required\",\n" +
-                "    \"userVerification\": \"required\"\n" +
-                "  }\n" +
-                "}",
-        // Defines whether you prefer to use only immediately available
-        // credentials, not hybrid credentials, to fulfill this request.
-        // This value is false by default.
-        //preferImmediatelyAvailableCredentials = false,
+        factory = { context ->
+            VideoView(context).apply {
+                setVideoPath("android.resource://${context.packageName}/${R.raw.output}")
+                setOnCompletionListener { mediaPlayer ->
+                    mediaPlayer.start() // Replay the video
+                }
+                //transformMatrixToGlobal()
+                setOnPreparedListener { mediaPlayer ->
+                    val videoWidth = mediaPlayer.videoWidth
+                    val videoHeight = mediaPlayer.videoHeight
+                    val sx = width.toFloat() / videoWidth.toFloat()
+                    val sy = height.toFloat() / videoHeight.toFloat()
+                    println(width)
+                    println(height)
+                    //mediaPlayer.setVideoScalingMode()
+
+                    val maxScale = max(sx.toDouble(), sy.toDouble()).toFloat()
+                    val matrix = Matrix()
+
+                    matrix.preTranslate((width - videoWidth.toFloat()) / 2, (height - videoHeight.toFloat()) / 2);
+                    matrix.preScale(
+                        videoWidth / width.toFloat(),
+                        videoHeight / height.toFloat()
+                    )
+                    matrix.postScale(maxScale, maxScale,
+                        (width.toFloat() / 2), height.toFloat() / 2);//后两个参数坐标是以整个View的坐标系以参考的
+
+
+                    transformMatrixToGlobal(matrix)
+                    postInvalidate();
+                    start()
+
+                }
+            }
+        }
+
     )
     if (false) {
         Scaffold(
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)
             },
-//            floatingActionButton = {
-//                ExtendedFloatingActionButton(
-//                    text = { Text("Show snackbar") },
-//                    icon = { Icon(Icons.Default.Favorite, contentDescription = "") },
-//                    onClick = {
-//                        coroutineScope.launch {
-//                            val result = snackbarHostState
-//                                .showSnackbar(
-//                                    message = "Snackbar",
-//                                    actionLabel = "Action",
-//                                    // Defaults to SnackbarDuration.Short
-//                                    duration = SnackbarDuration.Indefinite
-//                                )
-//                            when (result) {
-//                                SnackbarResult.ActionPerformed -> {
-//                                    /* Handle snackbar action performed */
-//                                }
-//                                SnackbarResult.Dismissed -> {
-//                                    /* Handle snackbar dismissed */
-//                                }
-//                            }
-//                        }
-//                    }
-//                )
-//            }
         )
         { contentPadding ->
             Column(
@@ -235,17 +224,30 @@ fun Login(
             ) {
                 Row (modifier=Modifier.fillMaxWidth().padding(top=40.dp), horizontalArrangement = Arrangement.Center){
                     Text(text = "Login",
-                        style = MaterialTheme.typography.labelLarge)
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = rainbowColors
+                            )
+                        ),            fontSize = 50.sp
+                    )
                 }
                 Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("User Email") },
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )
+                            .background(color = Color.White.copy(alpha = 0.5f))
+                            .padding(8.dp)
+                    ) {
+                        TextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("User Email") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        )
+                    }
+
                 }
                 Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
                     OutlinedTextField(
@@ -272,18 +274,6 @@ fun Login(
                     }
                 }
                 Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                    val launcher = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.StartIntentSenderForResult(),
-                        onResult = { result ->
-                            if(result.resultCode == RESULT_OK) {
-                                coroutineScope.launch {
-                                    val signInResult = googleAuthUiClient.signInWithIntent(
-                                        intent = result.data ?: return@launch
-                                    )
-                                }
-                            }
-                        }
-                    )
                     TextButton(
                         onClick = {
 //                    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
@@ -365,45 +355,63 @@ fun Login(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
         ) {
-            Row (modifier=Modifier.fillMaxWidth().padding(top=160.dp), horizontalArrangement = Arrangement.Center){
-                Text(text = "Login",
-                    style = MaterialTheme.typography.labelLarge)
+            Row (modifier=Modifier.fillMaxWidth().padding(top=240.dp), horizontalArrangement = Arrangement.Center){
+                Text(text = "Welcome to Todo List!",
+
+                    style = TextStyle(
+                        brush = Brush.linearGradient(
+                            colors = rainbowColors
+                        )
+                    ),fontSize = 35.sp, fontFamily = FontFamily.Cursive)
             }
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                OutlinedTextField(
+            Row (modifier=Modifier.fillMaxWidth().padding(top=40.dp, bottom = 30.dp), horizontalArrangement = Arrangement.Center){
+
+                TextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("User Email") },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+                        .width(300.dp),
+                    shape = RoundedCornerShape(12.dp)
+
                 )
-            }
+
+                }
             Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                OutlinedTextField(
+
+                TextField(
                     value = surname,
                     onValueChange = { surname = it },
                     label = { Text("Password") },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )}
+                        .width(300.dp),
+                    shape = RoundedCornerShape(12.dp)
+
+                )
+
+            }
+
+            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
+                TextButton(onClick = { navController.navigate("forgetOne") }, modifier = Modifier.padding(end = 30.dp)) {
+                    Text("Forget Your Password?", style = TextStyle(
+                        brush = Brush.linearGradient(
+                            colors = gradientColors
+                        )
+                    ),
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
+            }
             Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
                 Button(onClick = { login.value = true
                 }) {
                     Text("Login")
                 }
-                Button(onClick = { navController.navigate("forgetOne") }) {
-                    Text("Forget")
-                }
             }
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                Button(onClick = { navController.navigate("registrationOne")
-                    Log.d("MainActivity","world")}) {
-                    Text("Registration")
-                }
-            }
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+
+
+
+            Row (modifier=Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.Center){
                 val launcher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.StartIntentSenderForResult(),
                     onResult = { result ->
@@ -492,6 +500,18 @@ fun Login(
                             .size(200.dp)
                             .border(0.dp, Transparent)
                             .padding(0.dp),
+                    )
+                }
+            }
+            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                TextButton(onClick = { navController.navigate("registrationOne")
+                  }) {
+                    Text("Want to create an account?", style = TextStyle(
+                        brush = Brush.linearGradient(
+                            colors = gradientColors
+                        )
+                    ),
+                        textDecoration = TextDecoration.Underline,
                     )
                 }
             }

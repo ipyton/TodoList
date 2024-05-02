@@ -362,26 +362,14 @@ fun AddEvents(
                                                 ) {
                                                     // Handle failure
                                                 }
-                                            }
-                                            )
-
+                                            })
                                         }
-
                                         Log.d("placeId", placeId)
-                                    }
-
-                                )
-
-
+                                    })
                             }
-
-
-
                             }
                         }
-
                         }
-
                     }
                     Button(
                         onClick = {

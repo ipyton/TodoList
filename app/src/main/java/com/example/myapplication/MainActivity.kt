@@ -1,7 +1,13 @@
 package com.example.myapplication
 
-import android.app.Activity
+import android.content.pm.ActivityInfo
+import android.graphics.Matrix
+import android.opengl.ETC1
+import android.os.Build
 import android.os.Bundle
+import android.view.Window
+import android.view.WindowManager
+import android.widget.VideoView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -9,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,15 +31,18 @@ import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
-
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,11 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.myapplication.ui.theme.MyApplicationTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.MutableState
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -55,7 +61,6 @@ import com.example.myapplication.Pages.Done
 import com.example.myapplication.Pages.ForgetPageOne
 import com.example.myapplication.Pages.ForgetPageThree
 import com.example.myapplication.Pages.ForgetPageTwo
-
 import com.example.myapplication.Pages.Location
 import com.example.myapplication.Pages.Login
 import com.example.myapplication.Pages.RegistrationPageOne
@@ -63,15 +68,15 @@ import com.example.myapplication.Pages.RegistrationPageThree
 import com.example.myapplication.Pages.RegistrationPageTwo
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
-
 import com.example.myapplication.components.AddEvents
+import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.material.internal.ContextUtils.getActivity
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
 
 class MainActivity : ComponentActivity() {
@@ -92,6 +97,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val googleAuthUiClient by lazy{ GoogleAuthUIClient(context=applicationContext, Identity.getSignInClient(applicationContext)) }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         setContent {
             MyApplicationTheme {
@@ -125,6 +131,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun mainStage(
     loginState: MutableState<Boolean>,
@@ -153,6 +160,7 @@ fun mainStage(
 
 
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>,isVisible: MutableState<Boolean>, googleAuthUiClient: GoogleAuthUIClient) {
     NavHost(navController = navController, startDestination = "today") {
@@ -169,6 +177,7 @@ fun MyNavigator(navController: NavHostController, login: MutableState<Boolean>,i
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun AccountPage(
     login: MutableState<Boolean>,
@@ -178,6 +187,7 @@ fun AccountPage(
     AccountNavigator(navigator, login, googleAuthUiClient)
 }
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun AccountNavigator(
     navController: NavHostController,
