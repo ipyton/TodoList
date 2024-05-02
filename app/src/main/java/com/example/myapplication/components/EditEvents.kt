@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,17 +21,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,18 +48,15 @@ import androidx.core.app.ActivityCompat
 import com.example.myapplication.ApiClient
 import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.Pages.userId
-import com.example.myapplication.TodoItemDao
 import com.example.myapplication.entities.BusinessEntity
 import com.example.myapplication.entities.TodoItem
-import com.example.myapplication.util.FirebaseUtil.writeToFirebase
+import com.example.myapplication.util.FirebaseUtil.updateTodoItemInFirebase
 import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
@@ -74,22 +68,23 @@ import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(64)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AddEvents(
-    showAddEvent: MutableState<Boolean>,
+fun EditEvents(
+    showEditEvent: MutableState<Boolean>,
     viewModel: TodoListViewModel,
-    itemViewModel: TodoItemViewModel,
+    todoItem: TodoItem
 ) {
+
+    val todoItemViewModel: TodoItemViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
         LocalContext.current
     )
 
-
     val request = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()
     ) {
-        permissions->
+            permissions->
         run {
             when {
                 permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
@@ -110,10 +105,10 @@ fun AddEvents(
 
 
     var title by remember {
-        mutableStateOf("")
+        mutableStateOf(todoItem.title)
     }
     var introduction by remember {
-        mutableStateOf("")
+        mutableStateOf(todoItem.introduction)
     }
     var displayDateTimePicker = remember {
         mutableStateOf(false)
@@ -129,11 +124,11 @@ fun AddEvents(
     }
 
     var latitude by remember {
-     mutableStateOf(-1.0)
+        mutableStateOf(-1.0)
     }
 
     var longitude by remember {
-      mutableStateOf(-1.0)
+        mutableStateOf(-1.0)
     }
 
     var isDone by remember {
@@ -190,7 +185,7 @@ fun AddEvents(
             })
     }
     else {
-        Dialog(onDismissRequest = { }) {
+        Dialog(onDismissRequest = {  }) {
             // Draw a rectangle shape with rounded corners inside the dialog
             Card(
                 modifier = Modifier
@@ -221,19 +216,20 @@ fun AddEvents(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
-                        ){
+                    ){
 
-                            Text(modifier = Modifier.padding(12.dp),text = "Use current location?")
-                            Checkbox(
-                                checked = displayLocationPicker.value,
-                                onCheckedChange = {
-                                    displayLocationPicker.value = !displayLocationPicker.value
-                                    activeSuggestion = false
-                                }
-                            )
+                        Text(modifier = Modifier.padding(12.dp),text = "Use current location?")
+                        Checkbox(
+                            checked = displayLocationPicker.value,
+                            onCheckedChange = {
+                                displayLocationPicker.value = !displayLocationPicker.value
+                                activeSuggestion = false
+                            }
+                        )
 
                     }
                     if (!displayLocationPicker.value) {
+                        Log.d("enter", "1111")
                         if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                             && ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                             request.launch(arrayOf(
@@ -248,53 +244,35 @@ fun AddEvents(
 
                         DockedSearchBar(
                             query = searchLocation,
-                            leadingIcon={
-                                if (activeSuggestion) IconButton(onClick = {
-                                searchLocation = ""
-                                activeSuggestion = false
-                                suggestions.clear()
-                            }) {
-                                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Delete and disable the text input box")
-                            }},
-                            trailingIcon = {
-                                if (activeSuggestion)
-                                IconButton(onClick = {
-                                searchLocation = ""
-                                suggestions.clear()
-                            }) {
-                                Icon(Icons.Outlined.Clear, contentDescription = "Delete all contents")
-                            }},
                             onQueryChange = {
                                 searchLocation = it
                                 //suggestions.clear()
                                 if (it.isEmpty()) {
                                     activeSuggestion = false
-                                }
-                                if (it.length >= 3) {
+                                } else {
                                     if (latitude == -1.0 || longitude == -1.0) {
                                         return@DockedSearchBar
                                     }
                                     coroutineScope.launch {
-
-                                            ApiClient.apiService.autoCompelete(URLEncoder.encode("$latitude,$longitude", "UTF-8"), URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="establishment").enqueue(object :
-                                                Callback<ResponseBody> {
-                                                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                                                    println(call.request().url())
-                                                    if (response.isSuccessful) {
-                                                        var resultset:MutableList<BusinessEntity> = ArrayList()
-                                                        val post = response.body()?.string()
-                                                        if (post != null) {
-                                                            val jsonObj = JSONObject(post)
-                                                            Log.d("location", post)
-                                                            val jsonArray =
-                                                                jsonObj.getJSONArray("predictions")
-                                                            for (i in 0 until jsonArray.length()) {
-                                                                if (!activeSuggestion) {
-                                                                    break
-                                                                }
-                                                                val address = jsonArray.getJSONObject(i)
-                                                                val formattedAddress = address.getString("description")
-                                                                val placeId = address.getString("place_id")
+                                        Log.d("request", URLEncoder.encode(searchLocation, "UTF-8"))
+                                        ApiClient.apiService.autoCompelete("$latitude,$longitude", URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
+                                            Callback<ResponseBody> {
+                                            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                                if (response.isSuccessful) {
+                                                    var resultset:MutableList<BusinessEntity> = ArrayList()
+                                                    val post = response.body()?.string()
+                                                    if (post != null) {
+                                                        val jsonObj = JSONObject(post)
+                                                        Log.d("location", post)
+                                                        val jsonArray =
+                                                            jsonObj.getJSONArray("predictions")
+                                                        for (i in 0 until jsonArray.length()) {
+                                                            if (!activeSuggestion) {
+                                                                break
+                                                            }
+                                                            val address = jsonArray.getJSONObject(i)
+                                                            val formattedAddress = address.getString("description")
+                                                            val placeId = address.getString("place_id")
 
 //                                                                val latitude =
 //                                                                    address.getJSONObject("geometry")
@@ -303,31 +281,34 @@ fun AddEvents(
 //                                                                val longitude = address.getJSONObject("geometry")
 //                                                                    .getJSONObject("location")
 //                                                                    .getDouble("lng")
-                                                                //Log.d("details", "onResponse: " + fullName + latitude + longitude)
-                                                                resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
-                                                            }
-//                                                            if (activeSuggestion) {
-//                                                                suggestions.clear()
-//                                                            }
-                                                            suggestions = resultset
-                                                            activeSuggestion = true
+                                                            //Log.d("details", "onResponse: " + fullName + latitude + longitude)
+                                                            resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
                                                         }
-
-                                                    } else {
-                                                        Log.d("error", "response error!!!")
+                                                        if (!activeSuggestion) {
+                                                            suggestions.clear()
+                                                        }
+                                                        suggestions = resultset
+                                                        activeSuggestion = true
                                                     }
 
+                                                } else {
+                                                    Log.d("error", "response error!!!")
                                                 }
 
-                                                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                                                    // Handle failure
-                                                }
                                             }
-                                            )
-                                }
 
-                            }
-},
+                                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                                // Handle failure
+                                            }
+                                        }
+                                        )
+
+
+
+                                    }
+
+                                }
+                            },
                             onSearch = {
 
                             },
@@ -342,66 +323,78 @@ fun AddEvents(
                                 .verticalScroll(
                                     rememberScrollState()
                                 )) {
-                            suggestions.forEach { suggestion-> run {
-                                val get = suggestion
-                                ListItem(
-                                    headlineContent = { Text(get.formattedAddress) },
-                                    leadingContent = {
-                                        Icon(
-                                            Icons.Filled.Favorite,
-                                            contentDescription = "Localized description",
-                                        )
-                                    },
-                                    modifier = Modifier.clickable() {
-                                        val placeId = get.locationId
-                                        searchLocation = get.formattedAddress
-                                        activeSuggestion = false
-                                        coroutineScope.launch {
-                                            val target = get
-                                            ApiClient.apiService.getDetails(
-                                                target.locationId,
-                                                "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok"
-                                            ).enqueue(object :
-                                                Callback<ResponseBody> {
-                                                override fun onResponse(
-                                                    call: Call<ResponseBody>,
-                                                    response: Response<ResponseBody>
-                                                ) {
-                                                    if (response.isSuccessful) {
-                                                        val post = response.body()?.string()
-                                                        if (post != null) {
-                                                            Log.d("search result", post)
-                                                            val jsonObj = JSONObject(post)
-                                                            target.latitude =
-                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
-                                                                    .getJSONObject("location")
-                                                                    .getDouble("lat")
-                                                            target.longitude =
-                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
-                                                                    .getJSONObject("location")
-                                                                    .getDouble("lng")
-                                                            eventPlace.value = target
-                                                        }
+                                suggestions.forEach { suggestion-> run {
+                                    val get = suggestion
+                                    ListItem(
+                                        headlineContent = { Text(get.formattedAddress) },
+                                        leadingContent = {
+                                            Icon(
+                                                Icons.Filled.Favorite,
+                                                contentDescription = "Localized description",
+                                            )
+                                        },
+                                        modifier = Modifier.clickable() {
+                                            val placeId = get.locationId
+                                            searchLocation = get.formattedAddress
+                                            activeSuggestion = false
+                                            coroutineScope.launch {
+                                                val target = get
+                                                ApiClient.apiService.getDetails(
+                                                    target.locationId,
+                                                    "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok"
+                                                ).enqueue(object :
+                                                    Callback<ResponseBody> {
+                                                    override fun onResponse(
+                                                        call: Call<ResponseBody>,
+                                                        response: Response<ResponseBody>
+                                                    ) {
+                                                        if (response.isSuccessful) {
+                                                            val post = response.body()?.string()
+                                                            if (post != null) {
+                                                                Log.d("search result", post)
+                                                                val jsonObj = JSONObject(post)
+                                                                target.latitude =
+                                                                    jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                                        .getJSONObject("location")
+                                                                        .getDouble("lat")
+                                                                target.longitude =
+                                                                    jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                                        .getJSONObject("location")
+                                                                        .getDouble("lng")
+                                                                eventPlace.value = target
+                                                            }
 
-                                                    } else {
-                                                        Log.d("error", "response error!!!")
+                                                        } else {
+                                                            Log.d("error", "response error!!!")
+                                                        }
+                                                    }
+
+                                                    override fun onFailure(
+                                                        call: Call<ResponseBody>,
+                                                        t: Throwable
+                                                    ) {
+                                                        // Handle failure
                                                     }
                                                 }
+                                                )
 
-                                                override fun onFailure(
-                                                    call: Call<ResponseBody>,
-                                                    t: Throwable
-                                                ) {
-                                                    // Handle failure
-                                                }
-                                            })
+                                            }
+
+                                            Log.d("placeId", placeId)
                                         }
-                                        Log.d("placeId", placeId)
-                                    })
+
+                                    )
+
+
+                                }
+
+
+
+                                }
                             }
-                            }
+
                         }
-                        }
+
                     }
                     Button(
                         onClick = {
@@ -416,27 +409,26 @@ fun AddEvents(
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         TextButton(
-                            onClick = { showAddEvent.value = false },
+                            onClick = { showEditEvent.value = false },
                             modifier = Modifier.padding(8.dp),
                         ) {
                             Text("Cancel")
                         }
                         TextButton(
                             onClick = {
+                                    todoItem.title = title
+                                    todoItem.introduction = introduction
+                                    todoItem.date = selectedDateString
+                                    todoItem.time = selectedTimeString
+                                    todoItemViewModel.insertTodoItem(todoItem)
+                                    updateTodoItemInFirebase(userId, todoItem) {
+                                        viewModel.fetchAndGroupTodoItems()
+                                    }
+                                    Log.d("todoItem.title", "todoItem.title: ${todoItem.title}")
+                                    Log.d("todoItem.introduction", "todoItem.introduction: ${todoItem.introduction}")
 
-                                    writeToFirebase(
-                                        userId,
-                                        title,
-                                        introduction,
-                                        latitude,
-                                        longitude,
-                                        selectedDateString,
-                                        selectedTimeString,
-                                        isDone
-                                    )
 
-                                viewModel.fetchAndGroupTodoItems()
-                                showAddEvent.value = false},
+                                showEditEvent.value = false},
                             modifier = Modifier.padding(8.dp),
                         ) {
                             Text("Confirm")
@@ -447,8 +439,6 @@ fun AddEvents(
         }
     }
 }
-
-
 
 
 

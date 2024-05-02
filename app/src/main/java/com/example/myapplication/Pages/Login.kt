@@ -1,6 +1,8 @@
 package com.example.myapplication.Pages
 
 import android.app.Activity.RESULT_OK
+import android.content.ContentValues.TAG
+import android.widget.Toast
 import android.content.Intent
 import android.graphics.Matrix
 import android.os.Build
@@ -26,10 +28,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+
+import androidx.compose.foundation.text.KeyboardOptions
+
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -63,6 +69,12 @@ import androidx.compose.ui.graphics.Color.Companion.Green
 import androidx.compose.ui.graphics.Color.Companion.Magenta
 import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+
+
+
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Color.Companion.Yellow
 import androidx.compose.ui.graphics.graphicsLayer
@@ -71,6 +83,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDecoration
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -92,25 +105,31 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.myapplication.R
 import com.example.myapplication.util.GoogleAuthUIClient
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import com.example.myapplication.viewmodel.SignInViewModel
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+
 import kotlinx.coroutines.launch
 import kotlin.math.max
+
+
+var userEmail:String = ""
+var userId :String = ""
+
 
 
 fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth): Unit {
 
     // Handle the successfully returned credential.
     val credential = result.credential
-    println("-----------------------------------------------------")
-
     when (credential) {
         is PublicKeyCredential -> {
             val responseJson = credential.authenticationResponseJson
@@ -150,6 +169,8 @@ fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth): Unit {
     }
 
 }
+
+
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun Login(
@@ -168,6 +189,9 @@ fun Login(
         mutableStateOf(false)
     }
     var coroutineScope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+
     val credentialManager = CredentialManager.create(LocalContext.current)
     val gradientColors = listOf(Cyan, White /*...*/)
     AndroidView(
@@ -197,7 +221,8 @@ fun Login(
                         videoHeight / height.toFloat()
                     )
                     matrix.postScale(maxScale, maxScale,
-                        (width.toFloat() / 2), height.toFloat() / 2);//后两个参数坐标是以整个View的坐标系以参考的
+                        (width.toFloat() / 2), height.toFloat() / 2);
+
 
 
                     transformMatrixToGlobal(matrix)
@@ -348,7 +373,6 @@ fun Login(
             }
 
         }
-
     }
     else {
         Column(
@@ -363,6 +387,7 @@ fun Login(
                             colors = rainbowColors
                         )
                     ),fontSize = 35.sp, fontFamily = FontFamily.Cursive)
+
             }
             Row (modifier=Modifier.fillMaxWidth().padding(top=40.dp, bottom = 30.dp), horizontalArrangement = Arrangement.Center){
 
@@ -380,12 +405,14 @@ fun Login(
             Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
 
                 TextField(
-                    value = surname,
-                    onValueChange = { surname = it },
-                    label = { Text("Password") },
-                    modifier = Modifier
-                        .width(300.dp),
-                    shape = RoundedCornerShape(12.dp)
+                   value = surname,
+                onValueChange = { surname = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
 
                 )
 
@@ -402,14 +429,59 @@ fun Login(
                     )
                 }
             }
-            Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
-                Button(onClick = { login.value = true
-                }) {
-                    Text("Login")
+                    Row (modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+            Button(onClick = {
+                if (name.isEmpty() || surname.isEmpty())
+                {
+                    Toast.makeText(
+                        context,
+                        "Email and password can not be empty.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
-            }
+                else
+                {
+                    Firebase.auth.signInWithEmailAndPassword(name, surname)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful)
+                            {
+                                Log.d(TAG, "signInWithEmail:success")
+                                val user = Firebase.auth.currentUser
+                                userId = Firebase.auth.currentUser?.uid ?:"defaultUserId"
+                                val email = user?.email
+                                if (email != null)
+                                {
+                                    userEmail = email
 
+                                }
+                                Log.d(userEmail, "userEmail:${userEmail}")
+                                login.value = true
+                                user?.email?.let { userEmail ->
+                                    Firebase.firestore.collection("users")
+                                        .document(user.uid)
+                                        .set(mapOf("email" to userEmail))
+                                        .addOnSuccessListener {
+                                            Log.d(TAG, "DocumentSnapshot successfully written!")
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.w(TAG, "Error writing document", e)
+                                        }
+                                }
+                            }
+                            else
+                            {
+                                Log.w(TAG, "signInWithEmail:failure", task.exception)
+                                Toast.makeText(
+                                    context,
+                                    "Password does not match email.",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
 
+                        }
+                }
+            }) {
+                Text("Login")}
 
             Row (modifier=Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.Center){
                 val launcher = rememberLauncherForActivityResult(

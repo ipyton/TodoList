@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.devtools.ksp")
+
 
 }
 
@@ -118,6 +120,12 @@ dependencies {
     implementation ("androidx.credentials:credentials:1.2.1")
     implementation ("androidx.credentials:credentials-play-services-auth:1.2.1")
     implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.1")
+
 
 
 
