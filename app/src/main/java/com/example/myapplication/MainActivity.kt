@@ -87,6 +87,8 @@ import com.example.myapplication.Pages.RegistrationPageTwo
 
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
+import com.example.myapplication.Pages.userEmail
+import com.example.myapplication.Pages.userId
 import com.example.myapplication.components.AddEvents
 import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil.deleteSelectedTodoItemsFromFirebase
@@ -96,6 +98,7 @@ import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -165,8 +168,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun mainStage(
@@ -186,10 +187,14 @@ fun mainStage(
     val visible = remember {
         mutableStateOf(false)
     }
+    if(Firebase.auth.currentUser!=null) {
+        loginState.value = true
+    } else {
+        loginState.value = false
+    }
 
-
-
-    return if (loginState.value) {
+    return if (loginState.value ) {
+        println(Firebase.auth.currentUser)
         ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
     }
     else{
@@ -222,9 +227,9 @@ fun MyNavigator(navController: NavHostController,
     }
 
     NavHost(navController = navController, startDestination = "today") {
-        composable("Login") {
-            AccountPage(login = login,  googleAuthUiClient)
-        }
+//        composable("Login") {
+//            AccountPage(login = login,  googleAuthUiClient)
+//        }
         composable("Today") {
             Today(isVisible = isVisible, viewModel = todoListViewModel)
         }
@@ -309,6 +314,8 @@ fun ScaffoldExample(
 
 
     LaunchedEffect(todoListViewModel) {
+        userEmail = Firebase.auth.currentUser?.email.toString()
+        userId = Firebase.auth.currentUser?.uid ?: ""
         todoListViewModel.fetchAndGroupTodoItems()
     }
 

@@ -48,17 +48,16 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
     val scheduledItems = viewModel.scheduledTodoItems.collectAsState()
     val list = todayItems.value + scheduledItems.value
     val locationRequest = com.google.android.gms.location.LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 1000)
+
     var currentLat = remember{
         mutableDoubleStateOf(-1.0)
     }
     var currentLng = remember{
         mutableDoubleStateOf(-1.0)
     }
-
     var cameraPositionState = rememberCameraPositionState {
          position = CameraPosition.fromLatLngZoom(singapore, 10f)
     }
-
 
     val fineLocation = remember {
     mutableStateOf(false)
@@ -118,7 +117,6 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
     } else {
         if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fineLocation.value = true
-
         }
         if(ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 coarseLocation.value = true
@@ -148,8 +146,7 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
         println("using location")
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
-            ,
+            cameraPositionState = cameraPositionState,
             properties = MapProperties(isMyLocationEnabled = true),
             uiSettings = MapUiSettings(myLocationButtonEnabled = true)
 
@@ -158,8 +155,8 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
                 run{
                     Marker (
                         state = MarkerState(position = LatLng(it.latitude,it.longitude)),
-                        title = it.title + it.date + it.time,
-                        snippet = it.introduction
+                        title = it.title +":" + it.introduction,
+                        snippet =  it.date + it.time
                     )
                 }
             }

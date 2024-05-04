@@ -50,12 +50,6 @@ class AlarmReceiver:BroadcastReceiver(){
     override fun onReceive(context1: Context?, intent: Intent?) {
         var stringExtra = intent?.getStringExtra("title")
         var introductionExtra = intent?.getStringExtra("intro")
-
-
         sendNotifications(stringExtra.toString(), introductionExtra.toString(), context.applicationContext)
-
-
-
-
     }
 }

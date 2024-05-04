@@ -121,10 +121,12 @@ fun Account(navController: NavHostController, login: MutableState<Boolean>,viewM
         }
         Button(
             onClick = {
-                navController.navigate("Login")
-                login.value = false
+
+
                 Firebase.auth.signOut()
                 androidAlarmScheduler.clear()
+                login.value = false
+                //navController.navigate("Login")
                       },
             modifier = Modifier.fillMaxWidth()
         ) {
