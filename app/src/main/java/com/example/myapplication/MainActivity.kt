@@ -192,7 +192,6 @@ fun mainStage(
     } else {
         loginState.value = false
     }
-
     return if (loginState.value ) {
         println(Firebase.auth.currentUser)
         ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
@@ -269,9 +268,6 @@ fun AccountNavigator(
 //        composable("forgetThree") { ForgetPageThree(navController, login) }
         composable("registrationOne") { RegistrationPageOne(navController) }
         composable("registrationTwo") { RegistrationPageTwo(navController) }
-
-
-
     }
 }
 
@@ -357,7 +353,6 @@ fun ScaffoldExample(
                             }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "delete")
                             }
-
                         }
                     }
                 }
@@ -375,7 +370,6 @@ fun ScaffoldExample(
                                 selectedItem = index
                                 navController.navigate(items[index])
                             }
-
                         }
                     )
                 }

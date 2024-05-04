@@ -146,7 +146,7 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
         println("using location")
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
+            cameraPositionState = CameraPositionState(CameraPosition.fromLatLngZoom(LatLng(currentLat.doubleValue, currentLng.doubleValue), 10f)),
             properties = MapProperties(isMyLocationEnabled = true),
             uiSettings = MapUiSettings(myLocationButtonEnabled = true)
 
