@@ -2,6 +2,9 @@ package com.example.myapplication
 
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.util.Log
 import android.content.pm.ActivityInfo
 import android.graphics.Matrix
@@ -71,6 +74,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.myapplication.MainApplication.Companion.context
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
 import com.example.myapplication.Pages.ForgetPageOne
@@ -98,7 +102,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
-
+private fun createNotificationChannel() {
+    // Create the NotificationChannel, but only on API 26+ because
+    // the NotificationChannel class is not in the Support Library.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "todolist"
+        val descriptionText = "this is a channel for todo list"
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel("todolist", name, importance).apply {
+            description = descriptionText
+        }
+        // Register the channel with the system.
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+}
 class MainActivity : ComponentActivity() {
 
     val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
@@ -106,33 +125,12 @@ class MainActivity : ComponentActivity() {
         .setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com")
         .build()
 
-    val request: androidx.credentials.GetCredentialRequest = androidx.credentials.GetCredentialRequest.Builder()
-        .setCredentialOptions(listOf(googleIdOption))
-        .build()
-
-
-
-
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        /*lifecycleScope.launch(Dispatchers.IO) {
-            // 创建一个 TodoItem 实例
-            val todoItem = TodoItem(
-                documentId = "doc1",
-                date = "2024-04-28",
-                introduction = "This is a test todo item",
-                isDone = false,
-                latitude = 0.0,
-                longitude = 0.0,
-                time = "12:00 PM",
-                title = "Test Todo Item",
-                selected = false
-            )
+        createNotificationChannel()
+        val androidAlarmScheduler = AndroidAlarmScheduler(this)
 
-            // 插入数据到数据库
-            db.todoItemDao().insert(todoItem)
-        }*/
         val googleAuthUiClient by lazy{ GoogleAuthUIClient(context=applicationContext, Identity.getSignInClient(applicationContext)) }
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
@@ -160,7 +158,7 @@ class MainActivity : ComponentActivity() {
                         }
                     )
 
-                    mainStage(loginState, launcher, googleAuthUiClient)
+                    mainStage(loginState, launcher, googleAuthUiClient,androidAlarmScheduler)
                 }
             }
         }
@@ -175,6 +173,7 @@ fun mainStage(
     loginState: MutableState<Boolean>,
     launcher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>,
     googleAuthUiClient: GoogleAuthUIClient,
+    androidAlarmScheduler: AndroidAlarmScheduler
 ) {
 
     val userName = remember {
@@ -191,7 +190,7 @@ fun mainStage(
 
 
     return if (loginState.value) {
-        ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient)
+        ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
     }
     else{
         AccountPage(login = loginState, googleAuthUiClient)
@@ -208,7 +207,9 @@ fun MyNavigator(navController: NavHostController,
                 login: MutableState<Boolean>,
                 isVisible: MutableState<Boolean>,
                 googleAuthUiClient: GoogleAuthUIClient,
-                todoListViewModel: TodoListViewModel) {
+                todoListViewModel: TodoListViewModel,
+                androidAlarmScheduler: AndroidAlarmScheduler
+                ) {
     DisposableEffect(key1 = navController) {
         val callback = NavController.OnDestinationChangedListener { _, _, _ ->
             isVisible.value = false
@@ -232,7 +233,7 @@ fun MyNavigator(navController: NavHostController,
         }
         composable("Done") { Done(isVisible = isVisible, viewModel = todoListViewModel) }
         composable("Location") { Location(viewModel = todoListViewModel) }
-        composable("Account") { Account(navController, login=login, viewModel=todoListViewModel) }
+        composable("Account") { Account(navController, login=login, viewModel=todoListViewModel,androidAlarmScheduler) }
     }
 }
 
@@ -278,6 +279,7 @@ fun ScaffoldExample(
     login: MutableState<Boolean>,
     isVisible: MutableState<Boolean>,
     googleAuthUiClient: GoogleAuthUIClient,
+    androidAlarmScheduler: AndroidAlarmScheduler
 ) {
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -325,7 +327,7 @@ fun ScaffoldExample(
                         if (items[selectedItem] == "Today" || items[selectedItem] == "Scheduled") {
                             IconButton(onClick = {
                                 coroutineScope.launch {
-                                    markSelectedTodoItemsAsDone(selectedTodoItems, todoListViewModel)
+                                    markSelectedTodoItemsAsDone(selectedTodoItems, todoListViewModel,androidAlarmScheduler)
                                     isVisible.value = false
                                 }
                             }) {
@@ -339,7 +341,8 @@ fun ScaffoldExample(
                                 coroutineScope.launch {
                                     deleteSelectedTodoItemsFromFirebase(
                                         selectedTodoItems,
-                                        todoListViewModel
+                                        todoListViewModel,
+                                        androidAlarmScheduler = androidAlarmScheduler
                                     )
                                     isVisible.value = false
 
@@ -384,10 +387,10 @@ fun ScaffoldExample(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (showEventAdder.value) {
-                AddEvents(showEventAdder, todoListViewModel)
+                AddEvents(showEventAdder, todoListViewModel, scheduler = androidAlarmScheduler)
             }
             MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient,todoListViewModel = todoListViewModel
-            )
+            ,androidAlarmScheduler)
         }
     }
 }

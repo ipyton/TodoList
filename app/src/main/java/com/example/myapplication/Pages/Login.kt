@@ -154,7 +154,7 @@ fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth, login:Mutabl
                         println(googleIdTokenCredential.id)
                         println(googleIdTokenCredential.idToken)
                         userEmail = googleIdTokenCredential.id
-                        userId = googleIdTokenCredential.idToken
+                        userId = auth.currentUser?.uid.toString()
                         login.value = true
                         com.google.firebase.Firebase.firestore.collection("users")
                             .document(googleIdTokenCredential.idToken)
