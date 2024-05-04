@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.AndroidAlarmScheduler
 import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.Pages.userId
 import com.example.myapplication.entities.TodoItem
@@ -23,11 +24,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import java.time.format.DateTimeParseException
+import java.util.Calendar
 
 
 class TodoListViewModel : ViewModel() {
 
-    private val todayTodoItemsFlow = MutableStateFlow(listOf<TodoItem>(TodoItem(),TodoItem()))
+    private val todayTodoItemsFlow = MutableStateFlow(listOf<TodoItem>(TodoItem(), TodoItem()))
     val todayTodoItems = todayTodoItemsFlow.asStateFlow()
     private val a :MutableLiveData<MutableList<TodoItem>> = MutableLiveData()
 
@@ -66,8 +68,13 @@ class TodoListViewModel : ViewModel() {
         selectedTodoItemsFlow.update { updatedSelectedItems }
     }
 
-    fun removeSelectedItems() {
+    fun removeSelectedItems(androidAlarmScheduler: AndroidAlarmScheduler) {
         selectedTodoItemsFlow.value.forEach { item ->
+            val splitDate = item.date.split("-")
+            val splitTime = item.time.split(":")
+            val instance = Calendar.getInstance()
+            instance.set(splitDate[0].toInt(), splitDate[1].toInt() - 1, splitDate[2].toInt(), splitTime[0].toInt(), splitTime[1].toInt() )
+            androidAlarmScheduler.cancel(instance, item.title, item.introduction)
             todayTodoItemsFlow.update { it.toMutableList().apply { remove(item) }.toList() }
             scheduledTodoItemsFlow.update { it.toMutableList().apply { remove(item) }.toList() }
             doneTodoItemsFlow.update { it.toMutableList().apply { remove(item) }.toList() }

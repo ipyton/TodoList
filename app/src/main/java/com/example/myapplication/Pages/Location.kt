@@ -3,6 +3,7 @@ package com.example.myapplication.Pages
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationRequest
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,7 +21,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.entities.EventEntity
 import com.example.myapplication.viewmodel.TodoListViewModel
+import com.google.android.gms.location.LastLocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.CameraUpdate
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -32,14 +37,8 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.ktx.model.cameraPosition
 
-private fun getLocationPermission() {
-    /*
-     * Request location permission, so that we can get the location of the
-     * device. The result of the permission request is handled by a callback,
-     * onRequestPermissionsResult.
-     */
-}
 
 
 @Composable
@@ -48,7 +47,7 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
     val todayItems = viewModel.todayTodoItems.collectAsState()
     val scheduledItems = viewModel.scheduledTodoItems.collectAsState()
     val list = todayItems.value + scheduledItems.value
-
+    val locationRequest = com.google.android.gms.location.LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 1000)
 
     var currentLat = remember{
         mutableDoubleStateOf(-1.0)
@@ -56,17 +55,16 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
     var currentLng = remember{
         mutableDoubleStateOf(-1.0)
     }
-
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
+    var cameraPositionState = rememberCameraPositionState {
+         position = CameraPosition.fromLatLngZoom(singapore, 10f)
     }
+
     val fineLocation = remember {
     mutableStateOf(false)
     }
     val coarseLocation = remember {
         mutableStateOf(false)
     }
-
 
     val request = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()
     ) {
@@ -91,20 +89,24 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
 
         }
     }
-
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
         LocalContext.current
     )
+
+//    fusedLocationProviderClient.
+//    fusedLocationProviderClient.
     fusedLocationProviderClient.lastLocation.addOnSuccessListener { location : Location? ->
         // Got last known location. In some rare situations this can be null.
         if (location != null) {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
+
             currentLat.doubleValue = location.latitude
             currentLng.doubleValue = location.longitude
+            cameraPositionState.move(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
         } else {
             Log.d("location", "did not get the user location")
         }
     }
+
     if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
         && ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
         SideEffect {
@@ -115,7 +117,6 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
     } else {
         if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fineLocation.value = true
-
         }
         if(ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 coarseLocation.value = true
@@ -130,13 +131,6 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
             cameraPositionState = cameraPositionState
 
         ) {
-//        if (currentLat.value != -1.0 || currentLng.value !=-1.0) {
-//            Marker (
-//                state = MarkerState(position = LatLng(currentLat.value, currentLng.value)),
-//                title = "Your Location",
-//                icon = BitmapDescriptorFactory.
-//            )
-//        }
             list.forEach {
                 run{
                     Marker (
@@ -145,45 +139,29 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
                         snippet = it.introduction
                     )
                 }
-
             }
-
         }
-        
-
     }
     else{
         println("using location")
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
+            cameraPositionState = CameraPositionState(CameraPosition.fromLatLngZoom(LatLng(currentLat.doubleValue, currentLng.doubleValue), 10f)),
             properties = MapProperties(isMyLocationEnabled = true),
             uiSettings = MapUiSettings(myLocationButtonEnabled = true)
 
         ) {
-//        if (currentLat.value != -1.0 || currentLng.value !=-1.0) {
-//            Marker (
-//                state = MarkerState(position = LatLng(currentLat.value, currentLng.value)),
-//                title = "Your Location",
-//                icon = BitmapDescriptorFactory.
-//            )
-//        }
             todayItems.value.forEach {
                 run{
                     Marker (
                         state = MarkerState(position = LatLng(it.latitude,it.longitude)),
-                        title = it.title + it.date + it.time,
-                        snippet = it.introduction
+                        title = it.title +":" + it.introduction,
+                        snippet =  it.date + it.time
                     )
                 }
-
             }
-
         }
-
     }
-
-
 }
 
 
