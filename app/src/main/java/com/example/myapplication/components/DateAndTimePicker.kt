@@ -1,5 +1,6 @@
 package com.example.myapplication.components
 
+import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
@@ -58,9 +59,11 @@ fun DateAndTimePicker(display: MutableState<Boolean>,
     fun saveSelectedDateTime() {
         val selectedDateMillis = datePickerState.selectedDateMillis
         selectedDateString = selectedDateMillis?.let { Instant.ofEpochMilli(it).toString().substring(0, 10) } ?: ""
+        Log.d(TAG, "saveSelectedDateTime: " + selectedDateMillis?.let { Instant.ofEpochMilli(it).toString() })
         val hour = timePickerState.hour
         val minute = timePickerState.minute
         selectedTimeString = "$hour:$minute"
+        selectedTimeString = String.format("%02d:%02d", hour, minute)
         onDateTimeSelected(selectedDateString, selectedTimeString)
         Log.d("SelectedDateTime", "Selected Date: $selectedDateString")
         Log.d("SelectedDateTime", "Selected Time: $selectedTimeString")
@@ -80,7 +83,8 @@ fun DateAndTimePicker(display: MutableState<Boolean>,
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally).padding(start = 100.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = 100.dp)
                 ) {
                     if (currentState == "date") {
                         Button(onClick = { currentState = "date" },) {

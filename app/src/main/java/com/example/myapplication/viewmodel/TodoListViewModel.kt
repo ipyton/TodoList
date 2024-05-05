@@ -47,6 +47,8 @@ class TodoListViewModel : ViewModel() {
             scheduledTodoItemsFlow.update { groupedTodoItems["Scheduled"] ?: emptyList() }
             doneTodoItemsFlow.update { groupedTodoItems["Done"] ?: emptyList() }
         }
+
+
         /*Log.d("TodoListViewModel", "Today Todo Items: ${todayTodoItems.value}")
         Log.d("TodoListViewModel", "Scheduled Todo Items: ${scheduledTodoItems.value}")
         Log.d("TodoListViewModel", "Done Todo Items: ${doneTodoItems.value}")
@@ -92,6 +94,8 @@ class TodoListViewModel : ViewModel() {
                     "Scheduled"
                 }
 
+
+
                 if (!groupedTodoItems.containsKey(key)) {
                     groupedTodoItems[key] = mutableListOf()
                 }
@@ -101,9 +105,20 @@ class TodoListViewModel : ViewModel() {
                 Log.e("DateTimeParseException", "Error parsing date: ${todoItem.date}", e)
             }
         }
+        groupedTodoItems["Today"]?.sortBy { todoItem ->
+            val (hour, minute) = todoItem.time.split(":").map { it.toInt() }
+            hour * 60 + minute
+        }
+
+        groupedTodoItems["Scheduled"]?.sortBy { todoItem ->
+            val (year, month, day) = todoItem.date.split("-").map { it.toInt() }
+            val (hour, minute) = todoItem.time.split(":").map { it.toInt() }
+            LocalDate.of(year, month, day).atTime(hour, minute)}
 
         return groupedTodoItems
     }
+
+
 
     fun getAllTodoItemsFromFirebase(uid: String, callback: (List<TodoItem>) -> Unit) {
         FirebaseUtil.getUserEventsCollection(uid)

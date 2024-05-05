@@ -149,13 +149,14 @@ fun AddEvents(
     val currentTime = LocalTime.now()
     val formatter = DateTimeFormatter.ISO_TIME
     val formattedTime = currentTime.format(formatter)
+    Log.d(ContentValues.TAG, "AddEvents: " + formattedTime)
 
     var selectedDateString by remember {
         mutableStateOf("")
     }
 
     var selectedTimeString by remember {
-        mutableStateOf(formattedTime)
+        mutableStateOf("")
     }
 
 

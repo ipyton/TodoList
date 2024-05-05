@@ -323,7 +323,15 @@ fun ScaffoldExample(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 title = {
-                    Text(items[selectedItem])
+                    if (selectedItem == 0)
+                    {
+                        Text(items[selectedItem] + " " + currentDate)
+                    }
+                    else
+                    {
+                        Text(items[selectedItem])
+                    }
+
                 },
                 actions = {
                     if (selectedTodoItems.isNotEmpty()) {
