@@ -68,7 +68,7 @@ fun Scheduled(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
                 ListItem(
                     headlineContent = { Text(it.title) },
                     overlineContent = { Text(it.introduction) },
-                    supportingContent = { Text(it.time) },
+                    supportingContent = { Text(it.date) },
                     leadingContent = {
                         RadioButton(
                             selected = isSelected,

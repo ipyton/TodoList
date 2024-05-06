@@ -39,6 +39,8 @@ import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil.deleteTodoItemFromFirebase
 import com.example.myapplication.viewmodel.TodoListViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -51,6 +53,10 @@ fun Today(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
 
     //var selectedTodoItems = remember { mutableStateOf(mutableListOf<TodoItem>()) }
     //var scheduledItems = remember { mutableStateOf(scheduledTodoItems.toMutableList()) }
+
+    val currentDate = LocalDate.now()
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val formattedDate = currentDate.format(dateFormatter)
 
     LazyColumn {
         items(todayItems) {

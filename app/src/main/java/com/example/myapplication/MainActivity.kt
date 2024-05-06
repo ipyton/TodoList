@@ -103,6 +103,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import kotlin.math.max
 
 private fun createNotificationChannel() {
@@ -282,6 +283,7 @@ fun ScaffoldExample(
     googleAuthUiClient: GoogleAuthUIClient,
     androidAlarmScheduler: AndroidAlarmScheduler
 ) {
+    val currentDate = LocalDate.now()
     var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Today", "Scheduled", "Done", "Location", "Account")
@@ -323,7 +325,15 @@ fun ScaffoldExample(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 title = {
-                    Text(items[selectedItem])
+                    if (selectedItem == 0)
+                    {
+                        Text(items[selectedItem] + " " + currentDate)
+                    }
+                    else
+                    {
+                        Text(items[selectedItem])
+                    }
+
                 },
                 actions = {
                     if (selectedTodoItems.isNotEmpty()) {

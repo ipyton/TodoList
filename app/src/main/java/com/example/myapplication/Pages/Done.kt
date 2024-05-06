@@ -65,7 +65,7 @@ fun Done(isVisible: MutableState<Boolean>, viewModel: TodoListViewModel) {
                 ListItem(
                     headlineContent = { Text(it.title) },
                     overlineContent = { Text(it.introduction) },
-                    supportingContent = { Text(it.time) },
+                    supportingContent = { Text("Date: " + it.date + " " + "Time: " + it.time) },
                     leadingContent = {
                         RadioButton(
                             selected = isSelected,

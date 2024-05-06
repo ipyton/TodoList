@@ -14,6 +14,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -76,6 +77,8 @@ import retrofit2.Response
 import java.net.URLEncoder
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
@@ -211,14 +214,19 @@ fun AddEvents(
     }
 
     val currentDate = LocalDate.now()
-    val formatter = DateTimeFormatter.ISO_DATE
-    val formattedDate = currentDate.format(formatter)
+
+
+    val currentTime = LocalTime.now()
+    val formatter = DateTimeFormatter.ISO_TIME
+    val formattedTime = currentTime.format(formatter)
+    Log.d(ContentValues.TAG, "AddEvents: " + formattedTime)
+
     var selectedDateString by remember {
-        mutableStateOf(formattedDate)
+        mutableStateOf("")
     }
 
     var selectedTimeString by remember {
-        mutableStateOf("00:00")
+        mutableStateOf("")
     }
 
 
@@ -235,6 +243,10 @@ fun AddEvents(
     var eventPlace = remember {
         mutableStateOf(BusinessEntity("",1.0,1.0,""))
     }
+
+    val context = LocalContext.current
+
+
 
 
     fusedLocationProviderClient.lastLocation.addOnSuccessListener { location : Location? ->
@@ -253,6 +265,8 @@ fun AddEvents(
             onDateTimeSelected = { date, time ->
                 selectedDateString = date
                 selectedTimeString = time
+                Log.d(ContentValues.TAG, "AddEvents: " + selectedDateString)
+                Log.d(ContentValues.TAG, "AddEvents: " + selectedTimeString)
             })
     }
     else {
@@ -474,6 +488,63 @@ fun AddEvents(
                         }
                         TextButton(
                             onClick = {
+                                if (title.isNotBlank() && introduction.isNotBlank())
+                                {
+                                    if (selectedDateString.isNotBlank())
+                                    {
+                                        if (!LocalDate.parse(selectedDateString).isBefore(currentDate))
+                                        {
+                                            writeToFirebase(
+                                                userId,
+                                                title,
+                                                introduction,
+                                                latitude,
+                                                longitude,
+                                                selectedDateString,
+                                                selectedTimeString,
+                                                isDone
+                                            )
+                                            showAddEvent.value = false
+                                            Log.d(ContentValues.TAG, "AddEvents: successfully")
+                                            Log.d(ContentValues.TAG, "AddEvents: " + selectedDateString)
+                                            Log.d(ContentValues.TAG, "AddEvents: " + selectedTimeString)
+                                        }
+                                        else
+                                        {
+                                            displayDateTimePicker.value = true
+                                            Toast.makeText(
+                                                context,
+                                                "Can not select an early date",
+                                                Toast.LENGTH_SHORT,
+                                            ).show()
+                                            Log.d(ContentValues.TAG, "AddEvents: Failed")
+                                        }
+                                    }
+                                    else
+                                    {
+                                        displayDateTimePicker.value = true
+                                        Toast.makeText(
+                                            context,
+                                            "Please input a date",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                        Log.d(ContentValues.TAG, "AddEvents: Failed")
+                                    }
+                                }
+                                else
+                                {
+                                    showAddEvent.value = true
+                                    Toast.makeText(
+                                        context,
+                                        "Please input title and introduction",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                    Log.d(ContentValues.TAG, "AddEvents: Failed")
+                                }
+
+
+                                viewModel.fetchAndGroupTodoItems() },
+
                                 //test(Calendar.getInstance())
                                     permissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     permissionRequest.launch(Manifest.permission.USE_EXACT_ALARM)
