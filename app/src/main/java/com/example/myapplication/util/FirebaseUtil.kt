@@ -4,6 +4,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
+import com.example.myapplication.AndroidAlarmScheduler
 import com.example.myapplication.MainApplication
 import com.example.myapplication.Pages.userId
 import com.example.myapplication.entities.TodoItem
@@ -114,7 +115,8 @@ object FirebaseUtil {
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun deleteSelectedTodoItemsFromFirebase(
         selectedItems: List<TodoItem>,
-        todoListViewModel: TodoListViewModel
+        todoListViewModel: TodoListViewModel,
+        androidAlarmScheduler: AndroidAlarmScheduler
     ) {
         val roomDao = MainApplication.database.todoItemDao()
         selectedItems.forEachIndexed { index, todoItem ->
@@ -122,7 +124,7 @@ object FirebaseUtil {
                 if (index == selectedItems.size - 1)
                     todoListViewModel.apply {
                         fetchAndGroupTodoItems()
-                        removeSelectedItems()
+                        removeSelectedItems(androidAlarmScheduler = androidAlarmScheduler)
                     }
             }
             roomDao.deleteById(todoItem.documentId)
@@ -132,7 +134,8 @@ object FirebaseUtil {
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun markSelectedTodoItemsAsDone(
         selectedItems: List<TodoItem>,
-        todoListViewModel: TodoListViewModel
+        todoListViewModel: TodoListViewModel,
+        androidAlarmScheduler: AndroidAlarmScheduler
     ) {
         val roomDao = MainApplication.database.todoItemDao()
         selectedItems.forEachIndexed { index, todoItem ->
@@ -146,7 +149,7 @@ object FirebaseUtil {
                 if (index == selectedItems.size - 1)
                     todoListViewModel.apply {
                         fetchAndGroupTodoItems()
-                        removeSelectedItems()
+                        removeSelectedItems(androidAlarmScheduler)
                     }
             }
         }

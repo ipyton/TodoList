@@ -1,9 +1,18 @@
 package com.example.myapplication.components
 
 import android.Manifest
-import android.content.ContentValues
+import android.app.AlarmManager
+import android.app.AlarmManager.RTC
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,7 +32,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,31 +57,90 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import com.example.myapplication.AndroidAlarmScheduler
 import com.example.myapplication.ApiClient
-import com.example.myapplication.Pages.userEmail
+import com.example.myapplication.MainActivity
+import com.example.myapplication.MainApplication.Companion.context
 import com.example.myapplication.Pages.userId
-import com.example.myapplication.TodoItemDao
+import com.example.myapplication.R
 import com.example.myapplication.entities.BusinessEntity
-import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil.writeToFirebase
-import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.net.URLEncoder
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+
+
+val alarmManager =
+    context.applicationContext.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun addAlarm(calendar: Calendar, title:String, introduction:String, id:Int) {
+    val intent = Intent(context.applicationContext, AlarmReceiver::class.java)
+    intent.putExtra("title", title)
+    intent.putExtra("introduction", introduction)
+    intent.setAction("android.intent.action.NOTIFY")
+     val pendingIntent = PendingIntent.getBroadcast(context.applicationContext, id, intent,
+         PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+
+//    alarmManager.setExa
+    alarmManager?.setExactAndAllowWhileIdle(
+        RTC,
+        Instant.now().toEpochMilli(),
+        PendingIntent.getBroadcast(
+            context,
+            890,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    )
+
+    alarmManager?.setExact(RTC, calendar.timeInMillis,pendingIntent)
+    alarmManager?.setWindow(RTC, calendar.timeInMillis -1200000, 600000,pendingIntent)
+    //alarmManager?.set(RTC,Instant.now().toEpochMilli() + 2000,pendingIntent)
+    println("success")
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun test(calendar: Calendar) {
+    var intent1 = Intent(context, MainActivity::class.java)
+    var pendingIntent = PendingIntent.getActivity(
+        context, 0, intent1,
+        PendingIntent.FLAG_IMMUTABLE)
+
+    val builder =
+        context.let { NotificationCompat.Builder(it, "todolist").setContentTitle("testtest").setContentText("introduction.introduction").setDefaults(
+            Notification.DEFAULT_SOUND).setPriority(2).setSmallIcon(R.mipmap.ic_launcher_1).setContentIntent(pendingIntent).setDefaults(
+            NotificationCompat.DEFAULT_SOUND) }
+    val s = "notification "
+    val channel = NotificationChannel("todolist", s, NotificationManager.IMPORTANCE_HIGH).apply {
+        description = "this channel is used for notification."
+    }
+    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    manager.createNotificationChannel(channel)
+    manager.notify(10, builder.build())
+
+
+}
+
+fun cancelAlarm(requestId:Int) {
+    val intent = Intent(context, AlarmReceiver::class.java)
+    val pendingIntent = PendingIntent.getService(context, requestId, intent,
+        PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
+    alarmManager?.cancel(pendingIntent)
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,14 +149,18 @@ import java.time.format.DateTimeFormatter
 fun AddEvents(
     showAddEvent: MutableState<Boolean>,
     viewModel: TodoListViewModel,
-    itemViewModel: TodoItemViewModel,
+    scheduler: AndroidAlarmScheduler
 ) {
-
     val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
         LocalContext.current
     )
+    //val intent = Intent(context, AlarmReceiver.class)
 
+    val permissionRequest = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) {
+        permission -> run {
+        }
 
+    }
     val request = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()
     ) {
         permissions->
@@ -102,9 +173,8 @@ fun AddEvents(
                 permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
                     // Only approximate location access granted.
                 }
-
                 else -> {
-                    // No location access granted.
+
                 }
             }
 
@@ -171,9 +241,7 @@ fun AddEvents(
     var coroutineScope = rememberCoroutineScope()
 
     var eventPlace = remember {
-
         mutableStateOf(BusinessEntity("",1.0,1.0,""))
-
     }
 
     val context = LocalContext.current
@@ -190,8 +258,6 @@ fun AddEvents(
         } else {
             Log.d("location", "did not get the user location")
         }
-
-
     }
 
     if (displayDateTimePicker.value) {
@@ -256,10 +322,6 @@ fun AddEvents(
 
 
                         fusedLocationProviderClient.getLastLocation()
-                        //val lat = result.latitude
-                        //val long=result.longitude
-                        //Log.d("locationcurrent", "" + lat + " " + long)
-
                         DockedSearchBar(
                             query = searchLocation,
                             leadingIcon={
@@ -289,7 +351,6 @@ fun AddEvents(
                                         return@DockedSearchBar
                                     }
                                     coroutineScope.launch {
-
                                             ApiClient.apiService.autoCompelete(URLEncoder.encode("$latitude,$longitude", "UTF-8"), URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="establishment").enqueue(object :
                                                 Callback<ResponseBody> {
                                                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
@@ -309,20 +370,9 @@ fun AddEvents(
                                                                 val address = jsonArray.getJSONObject(i)
                                                                 val formattedAddress = address.getString("description")
                                                                 val placeId = address.getString("place_id")
-
-//                                                                val latitude =
-//                                                                    address.getJSONObject("geometry")
-//                                                                        .getJSONObject("location")
-//                                                                        .getDouble("lat")
-//                                                                val longitude = address.getJSONObject("geometry")
-//                                                                    .getJSONObject("location")
-//                                                                    .getDouble("lng")
-                                                                //Log.d("details", "onResponse: " + fullName + latitude + longitude)
                                                                 resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
                                                             }
-//                                                            if (activeSuggestion) {
-//                                                                suggestions.clear()
-//                                                            }
+
                                                             suggestions = resultset
                                                             activeSuggestion = true
                                                         }
@@ -371,9 +421,8 @@ fun AddEvents(
                                         searchLocation = get.formattedAddress
                                         activeSuggestion = false
                                         coroutineScope.launch {
-                                            val target = get
                                             ApiClient.apiService.getDetails(
-                                                target.locationId,
+                                                get.locationId,
                                                 "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok"
                                             ).enqueue(object :
                                                 Callback<ResponseBody> {
@@ -386,15 +435,17 @@ fun AddEvents(
                                                         if (post != null) {
                                                             Log.d("search result", post)
                                                             val jsonObj = JSONObject(post)
-                                                            target.latitude =
-                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                            get.latitude =
+                                                                jsonObj.getJSONObject("result")
+                                                                    .getJSONObject("geometry")
                                                                     .getJSONObject("location")
                                                                     .getDouble("lat")
-                                                            target.longitude =
-                                                                jsonObj.getJSONObject("result").getJSONObject("geometry")
+                                                            get.longitude =
+                                                                jsonObj.getJSONObject("result")
+                                                                    .getJSONObject("geometry")
                                                                     .getJSONObject("location")
                                                                     .getDouble("lng")
-                                                            eventPlace.value = target
+                                                            eventPlace.value = get
                                                         }
 
                                                     } else {
@@ -493,6 +544,33 @@ fun AddEvents(
 
 
                                 viewModel.fetchAndGroupTodoItems() },
+
+                                //test(Calendar.getInstance())
+                                    permissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    permissionRequest.launch(Manifest.permission.USE_EXACT_ALARM)
+                                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                                        val splitDate = selectedDateString.split("-")
+                                        val splitTime = selectedTimeString.split(":")
+
+                                        val instance = Calendar.getInstance()
+                                        instance.set(splitDate[0].toInt(), splitDate[1].toInt()-1, splitDate[2].toInt(), splitTime[0].toInt(), splitTime[1].toInt() )
+                                        scheduler.schedule(instance, title, introduction)
+                                        //test(Calendar.getInstance())
+                                    }
+                                    writeToFirebase(
+                                        userId,
+                                        title,
+                                        introduction,
+                                        if(displayLocationPicker.value) { latitude}else{eventPlace.value.latitude},
+                                        if(displayLocationPicker.value) { longitude}else{eventPlace.value.longitude},
+                                        selectedDateString,
+                                        selectedTimeString,
+                                        isDone
+                                    )
+
+                                viewModel.fetchAndGroupTodoItems()
+                                showAddEvent.value = false
+                                      },
                             modifier = Modifier.padding(8.dp),
                         ) {
                             Text("Confirm")

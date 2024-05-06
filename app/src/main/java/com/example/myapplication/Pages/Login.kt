@@ -154,7 +154,7 @@ fun handleSignIn(result: GetCredentialResponse, auth: FirebaseAuth, login:Mutabl
                         println(googleIdTokenCredential.id)
                         println(googleIdTokenCredential.idToken)
                         userEmail = googleIdTokenCredential.id
-                        userId = googleIdTokenCredential.idToken
+                        userId = auth.currentUser?.uid.toString()
                         login.value = true
                         com.google.firebase.Firebase.firestore.collection("users")
                             .document(googleIdTokenCredential.idToken)
@@ -229,8 +229,6 @@ fun Login(
                     )
                     matrix.postScale(maxScale, maxScale,
                         (width.toFloat() / 2), height.toFloat() / 2);
-
-
 
                     transformMatrixToGlobal(matrix)
                     postInvalidate();
@@ -352,20 +350,7 @@ fun Login(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                val launcher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.StartIntentSenderForResult(),
-                    onResult = { result ->
-                        if (result.resultCode == RESULT_OK) {
-                            coroutineScope.launch {
-                                val signInResult = googleAuthUiClient.signInWithIntent(
-                                    intent = result.data ?: return@launch
-                                )
-                            }
-                        } else {
-                            println(result.resultCode)
-                        }
-                    }
-                )
+
                 TextButton(
                     onClick = {
 
@@ -416,8 +401,6 @@ fun Login(
                                         }
                                     }
                                 }
-
-
 
                             } catch (err: Exception) {
                                 println(err)

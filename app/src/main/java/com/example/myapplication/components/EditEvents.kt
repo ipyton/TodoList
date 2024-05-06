@@ -255,7 +255,8 @@ fun EditEvents(
                                     }
                                     coroutineScope.launch {
                                         Log.d("request", URLEncoder.encode(searchLocation, "UTF-8"))
-                                        ApiClient.apiService.autoCompelete("$latitude,$longitude", URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
+                                        ApiClient.apiService.autoCompelete("$latitude,$longitude",
+                                            URLEncoder.encode(searchLocation, "UTF-8"), "AIzaSyBlBlflFyhquV_cbyY1HVrdz5-K8MDRTok", type="geocode").enqueue(object :
                                             Callback<ResponseBody> {
                                             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                                                 if (response.isSuccessful) {
@@ -302,9 +303,6 @@ fun EditEvents(
                                             }
                                         }
                                         )
-
-
-
                                     }
 
                                 }
@@ -368,7 +366,6 @@ fun EditEvents(
                                                             Log.d("error", "response error!!!")
                                                         }
                                                     }
-
                                                     override fun onFailure(
                                                         call: Call<ResponseBody>,
                                                         t: Throwable
@@ -377,24 +374,14 @@ fun EditEvents(
                                                     }
                                                 }
                                                 )
-
                                             }
-
                                             Log.d("placeId", placeId)
                                         }
-
                                     )
-
-
                                 }
-
-
-
                                 }
                             }
-
                         }
-
                     }
                     Button(
                         onClick = {
