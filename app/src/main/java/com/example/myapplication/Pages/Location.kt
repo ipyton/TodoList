@@ -149,7 +149,6 @@ fun Location(viewModel: TodoListViewModel = viewModel()) {
             cameraPositionState = CameraPositionState(CameraPosition.fromLatLngZoom(LatLng(currentLat.doubleValue, currentLng.doubleValue), 10f)),
             properties = MapProperties(isMyLocationEnabled = true),
             uiSettings = MapUiSettings(myLocationButtonEnabled = true)
-
         ) {
             todayItems.value.forEach {
                 run{

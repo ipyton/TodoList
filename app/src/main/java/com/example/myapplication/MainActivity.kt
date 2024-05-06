@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Window
 import android.view.WindowManager
+import android.widget.Toast
 import android.widget.VideoView
 
 import androidx.activity.ComponentActivity
@@ -99,6 +100,7 @@ import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -137,6 +139,7 @@ class MainActivity : ComponentActivity() {
 
         val googleAuthUiClient by lazy{ GoogleAuthUIClient(context=applicationContext, Identity.getSignInClient(applicationContext)) }
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        Firebase.database.setPersistenceEnabled(true)
 
         setContent {
             MyApplicationTheme {
@@ -145,6 +148,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
+
+
                     val loginState = remember {
                         mutableStateOf(false)
                     }
@@ -194,10 +200,23 @@ fun mainStage(
         loginState.value = false
     }
     return if (loginState.value ) {
-        println(Firebase.auth.currentUser)
+        Firebase.database.getReference().onDisconnect().apply {
+            Toast.makeText(
+                context,
+                "You are offline now.",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
         ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
     }
     else{
+        Firebase.database.getReference().onDisconnect().apply {
+            Toast.makeText(
+                context,
+                "You are offline now.",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
         AccountPage(login = loginState, googleAuthUiClient)
     }
 }

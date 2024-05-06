@@ -7,6 +7,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -254,7 +255,6 @@ fun AddEvents(
         if (location != null) {
             latitude = location.latitude
             longitude = location.longitude
-            Log.d("location",""+latitude + " " + longitude)
         } else {
             Log.d("location", "did not get the user location")
         }
@@ -265,8 +265,6 @@ fun AddEvents(
             onDateTimeSelected = { date, time ->
                 selectedDateString = date
                 selectedTimeString = time
-                Log.d(ContentValues.TAG, "AddEvents: " + selectedDateString)
-                Log.d(ContentValues.TAG, "AddEvents: " + selectedTimeString)
             })
     }
     else {
@@ -505,9 +503,7 @@ fun AddEvents(
                                                 isDone
                                             )
                                             showAddEvent.value = false
-                                            Log.d(ContentValues.TAG, "AddEvents: successfully")
-                                            Log.d(ContentValues.TAG, "AddEvents: " + selectedDateString)
-                                            Log.d(ContentValues.TAG, "AddEvents: " + selectedTimeString)
+
                                         }
                                         else
                                         {
@@ -543,9 +539,7 @@ fun AddEvents(
                                 }
 
 
-                                viewModel.fetchAndGroupTodoItems() },
-
-                                //test(Calendar.getInstance())
+                                viewModel.fetchAndGroupTodoItems()
                                     permissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     permissionRequest.launch(Manifest.permission.USE_EXACT_ALARM)
                                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
@@ -555,20 +549,8 @@ fun AddEvents(
                                         val instance = Calendar.getInstance()
                                         instance.set(splitDate[0].toInt(), splitDate[1].toInt()-1, splitDate[2].toInt(), splitTime[0].toInt(), splitTime[1].toInt() )
                                         scheduler.schedule(instance, title, introduction)
-                                        //test(Calendar.getInstance())
-                                    }
-                                    writeToFirebase(
-                                        userId,
-                                        title,
-                                        introduction,
-                                        if(displayLocationPicker.value) { latitude}else{eventPlace.value.latitude},
-                                        if(displayLocationPicker.value) { longitude}else{eventPlace.value.longitude},
-                                        selectedDateString,
-                                        selectedTimeString,
-                                        isDone
-                                    )
 
-                                viewModel.fetchAndGroupTodoItems()
+                                    }
                                 showAddEvent.value = false
                                       },
                             modifier = Modifier.padding(8.dp),
