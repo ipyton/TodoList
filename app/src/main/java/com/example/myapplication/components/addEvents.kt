@@ -317,8 +317,6 @@ fun AddEvents(
                             request.launch(arrayOf(
                                 Manifest.permission.ACCESS_FINE_LOCATION,
                                 Manifest.permission.ACCESS_COARSE_LOCATION))
-
-
                         fusedLocationProviderClient.getLastLocation()
                         DockedSearchBar(
                             query = searchLocation,
@@ -380,7 +378,6 @@ fun AddEvents(
                                                     }
 
                                                 }
-
                                                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                                                     // Handle failure
                                                 }

@@ -1,13 +1,19 @@
 package com.example.myapplication
 
 
+import android.Manifest
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.Matrix
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.opengl.ETC1
 import android.os.Build
 import android.os.Bundle
@@ -63,11 +69,15 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.getSystemService
 
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -106,6 +116,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.util.Calendar
 import kotlin.math.max
 
 private fun createNotificationChannel() {
@@ -199,24 +210,67 @@ fun mainStage(
     } else {
         loginState.value = false
     }
-    return if (loginState.value ) {
-        Firebase.database.getReference().onDisconnect().apply {
+
+    val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        // network is available for use
+        override fun onAvailable(network: Network) {
+            super.onAvailable(network)
+            Toast.makeText(
+                context,
+                "You are available now.",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+
+        // Network capabilities have changed for the network
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities
+        ) {
+            super.onCapabilitiesChanged(network, networkCapabilities)
+            val unmetered = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+        }
+
+        // lost network connection
+        override fun onLost(network: Network) {
+            super.onLost(network)
             Toast.makeText(
                 context,
                 "You are offline now.",
                 Toast.LENGTH_SHORT,
             ).show()
+
         }
+    }
+    val networkRequest = NetworkRequest.Builder()
+        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+        .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+        .build()
+
+    val permissionRequest = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()) {
+            permissions -> run {
+                    var connectivityManager = context.getSystemService(ConnectivityManager::class.java) as ConnectivityManager
+                    connectivityManager.requestNetwork(networkRequest, networkCallback)
+
+            }
+    }
+
+
+
+    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED ||
+        ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
+        SideEffect {
+            permissionRequest.launch(arrayOf(
+                Manifest.permission.CHANGE_NETWORK_STATE,
+                Manifest.permission.WRITE_SETTINGS))
+        }
+    }
+
+    return if (loginState.value ) {
         ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
     }
     else{
-        Firebase.database.getReference().onDisconnect().apply {
-            Toast.makeText(
-                context,
-                "You are offline now.",
-                Toast.LENGTH_SHORT,
-            ).show()
-        }
         AccountPage(login = loginState, googleAuthUiClient)
     }
 }
