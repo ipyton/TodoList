@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.core.content.getSystemService
 import com.example.myapplication.components.AlarmReceiver
 import java.time.Instant
 import java.util.Calendar

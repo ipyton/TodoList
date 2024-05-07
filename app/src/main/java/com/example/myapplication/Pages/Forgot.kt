@@ -24,9 +24,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -34,8 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.myapplication.Stepper
-import com.example.myapplication.components.stepForResetPassword
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -77,8 +73,8 @@ fun ForgetPageOne(navController: NavHostController, login: MutableState<Boolean>
                 .fillMaxWidth()
                 .padding(8.dp))
 
-        Text(text = "Click this to receive email",
-            style = TextStyle(fontSize = 10.sp,
+        Text(text = "⭐ Click this to receive email ⭐",
+            style = TextStyle(fontSize = 15.sp,
                 fontWeight = FontWeight.Normal),
             modifier = Modifier.padding(16.dp).clickable {
                 val emailAddress = username
@@ -125,85 +121,3 @@ fun ForgetPageOne(navController: NavHostController, login: MutableState<Boolean>
     }
 }
 
-//@Composable
-//fun ForgetPageTwo(navController: NavHostController, login: MutableState<Boolean>)
-//{
-//    var password by remember { mutableStateOf("") }
-//    var confirmPassword by remember { mutableStateOf("") }
-//
-//    Column (modifier = Modifier
-//        .fillMaxWidth()
-//        .padding(16.dp))
-//    {
-//        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start)
-//        {
-//            IconButton(onClick = { navController.navigate("forgetOne") }, modifier = Modifier.padding(8.dp))
-//            {
-//                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//            }
-//        }
-//        Text (text = "Reset Password page",
-//            style = TextStyle(fontSize = 24.sp,
-//                fontWeight = FontWeight.Bold),
-//            modifier = Modifier.padding(16.dp))
-//
-//        stepForResetPassword(step = 2)
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        TextField(value = password,
-//            onValueChange = { password = it},
-//            label = {Text(text = "Enter new Password")},
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(8.dp))
-//
-//        TextField(value = confirmPassword,
-//            onValueChange = {confirmPassword = it},
-//            label = { Text(text = "Confirm Password")},
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(8.dp))
-//
-//        Button(onClick = { navController.navigate("forgetThree")  },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(8.dp)
-//                .offset(y = 128.dp))
-//        {
-//            Text(text = "NEXT")
-//        }
-//    }
-//}
-//
-//@Composable
-//fun ForgetPageThree(navController: NavHostController, login: MutableState<Boolean>)
-//{
-//    Column (modifier = Modifier
-//        .fillMaxWidth()
-//        .padding(16.dp))
-//    {
-//        Text (text = "Reset Password page",
-//            style = TextStyle(fontSize = 24.sp,
-//                fontWeight = FontWeight.Bold),
-//            modifier = Modifier.padding(16.dp))
-//
-//        stepForResetPassword(step = 3)
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Text (text = "Password Successfully Reset",
-//            style = TextStyle(fontSize = 24.sp,
-//                fontWeight = FontWeight.Bold),
-//            modifier = Modifier.padding(16.dp))
-//
-//        Button(onClick = { navController.navigate("login") },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(8.dp)
-//                .offset(y = 128.dp))
-//        {
-//            Text(text = "RETURN")
-//        }
-//    }
-//}

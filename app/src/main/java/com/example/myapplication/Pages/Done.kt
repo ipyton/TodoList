@@ -30,10 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.example.myapplication.Activities.ActivityItem
 import com.example.myapplication.components.EditEvents
-
-import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil.deleteTodoItemFromFirebase
 import com.example.myapplication.viewmodel.TodoListViewModel
 import kotlinx.coroutines.launch

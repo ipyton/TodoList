@@ -1,30 +1,17 @@
 package com.example.myapplication.components
 
-import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings.Global.getString
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.example.myapplication.MainActivity
 import com.example.myapplication.MainApplication.Companion.context
 import com.example.myapplication.R
-import com.google.android.material.snackbar.Snackbar
 import java.time.Instant
 
 val manager = context.applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
