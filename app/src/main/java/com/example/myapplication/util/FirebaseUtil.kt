@@ -1,9 +1,7 @@
 package com.example.myapplication.util
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.MutableState
 import com.example.myapplication.AndroidAlarmScheduler
 import com.example.myapplication.MainApplication
 import com.example.myapplication.Pages.userId
@@ -14,12 +12,8 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 object FirebaseUtil {
-    //private val db = FirebaseFirestore.getInstance()
 
     fun getUserEventsCollection(uid: String): Task<QuerySnapshot> {
         val userDocRef = FirebaseFirestore.getInstance().collection("users").document(uid)

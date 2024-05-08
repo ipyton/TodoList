@@ -4,25 +4,17 @@ package com.example.myapplication.viewmodel
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.myapplication.AndroidAlarmScheduler
-import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.Pages.userId
 import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
 import java.time.format.DateTimeParseException
 import java.util.Calendar
 
@@ -45,8 +37,6 @@ class TodoListViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun fetchAndGroupTodoItems() {
-        //Log.d("TodoListViewModel", "fetchAndGroupTodoItems() called")
-
         getAllTodoItemsFromFirebase(userId) { todoItems ->
             val groupedTodoItems = groupTodoItemsByDate(todoItems)
             todayTodoItemsFlow.update { groupedTodoItems["Today"]?.toList() ?: emptyList() }
@@ -54,11 +44,6 @@ class TodoListViewModel : ViewModel() {
             doneTodoItemsFlow.update { groupedTodoItems["Done"]?.toList()?: emptyList() }
         }
 
-
-        /*Log.d("TodoListViewModel", "Today Todo Items: ${todayTodoItems.value}")
-        Log.d("TodoListViewModel", "Scheduled Todo Items: ${scheduledTodoItems.value}")
-        Log.d("TodoListViewModel", "Done Todo Items: ${doneTodoItems.value}")
-        Log.d("TodoListViewModel", "Selected Todo Items: ${selectedTodoItems.value}")*/
     }
     fun toggleTodoItemSelection(todoItem: TodoItem) {
         val updatedSelectedItems = selectedTodoItems.value.toMutableList()
@@ -111,7 +96,6 @@ class TodoListViewModel : ViewModel() {
                     groupedTodoItems[key] = mutableListOf()
                 }
                 groupedTodoItems[key]?.add(todoItem)
-                //Log.d("TodoItemGrouping", "TodoItem: ${todoItem.title} Date: ${todoItem.date} Key: $key")
             } catch (e: DateTimeParseException) {
                 Log.e("DateTimeParseException", "Error parsing date: ${todoItem.date}", e)
             }

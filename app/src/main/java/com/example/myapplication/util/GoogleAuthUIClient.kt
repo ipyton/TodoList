@@ -2,8 +2,6 @@ package com.example.myapplication.util
 
 import android.content.Context
 import android.content.Intent
-import android.content.IntentSender
-import com.example.myapplication.R
 import com.example.myapplication.viewmodel.SignInResult
 import com.example.myapplication.viewmodel.UserData
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -19,7 +17,6 @@ class GoogleAuthUIClient(private val context: Context,
 
     private val auth = Firebase.auth
     private fun buildSignInRequest(): BeginSignInRequest {
-        //context.getString(R.string.web_client_id)
         return BeginSignInRequest.Builder()
             .setPasswordRequestOptions(
                 BeginSignInRequest.PasswordRequestOptions.builder()
@@ -35,18 +32,7 @@ class GoogleAuthUIClient(private val context: Context,
             .setAutoSelectEnabled(false)
             .build()
     }
-    suspend fun signIn(): IntentSender? {
-        val result = try {
-            oneTapClient.beginSignIn(
-                buildSignInRequest()
-            ).await()
-        } catch(e: Exception) {
-            e.printStackTrace()
-            if(e is CancellationException) throw e
-            null
-        }
-        return result?.pendingIntent?.intentSender
-    }
+
 
     suspend fun signInWithIntent(intent: Intent): SignInResult {
         val credential = oneTapClient.getSignInCredentialFromIntent(intent)
@@ -73,18 +59,5 @@ class GoogleAuthUIClient(private val context: Context,
             )
         }
     }
-
-    suspend fun signOut() {
-        try {
-            oneTapClient.signOut().await()
-            auth.signOut()
-        } catch(e: Exception) {
-            e.printStackTrace()
-            if(e is CancellationException) throw e
-        }
-    }
-
-
-
 
 }

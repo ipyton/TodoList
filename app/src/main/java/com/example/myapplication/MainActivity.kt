@@ -3,11 +3,12 @@ package com.example.myapplication
 
 import android.Manifest
 import android.app.Application
+
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
 import android.content.pm.ActivityInfo
+
 import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.net.ConnectivityManager
@@ -15,13 +16,10 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.opengl.ETC1
+
 import android.os.Build
 import android.os.Bundle
-import android.view.Window
-import android.view.WindowManager
 import android.widget.Toast
-import android.widget.VideoView
-
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -64,11 +62,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+
 import androidx.compose.runtime.SideEffect
 
 import androidx.compose.runtime.collectAsState
@@ -89,35 +89,27 @@ import com.example.myapplication.MainApplication.Companion.context
 import com.example.myapplication.Pages.Account
 import com.example.myapplication.Pages.Done
 import com.example.myapplication.Pages.ForgetPageOne
-
 import com.example.myapplication.Pages.Location
 import com.example.myapplication.Pages.Login
 import com.example.myapplication.Pages.RegistrationPageOne
-
 import com.example.myapplication.Pages.RegistrationPageTwo
-
 import com.example.myapplication.Pages.Scheduled
 import com.example.myapplication.Pages.Today
 import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.Pages.userId
 import com.example.myapplication.components.AddEvents
-import com.example.myapplication.entities.TodoItem
 import com.example.myapplication.util.FirebaseUtil.deleteSelectedTodoItemsFromFirebase
 import com.example.myapplication.util.FirebaseUtil.markSelectedTodoItemsAsDone
 import com.example.myapplication.util.GoogleAuthUIClient
-import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
-import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.util.Calendar
-import kotlin.math.max
+
 
 private fun createNotificationChannel() {
     // Create the NotificationChannel, but only on API 26+ because
@@ -137,10 +129,6 @@ private fun createNotificationChannel() {
 }
 class MainActivity : ComponentActivity() {
 
-    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(true)
-        .setServerClientId("467501865267-im97al3s39cei2j2l17a1karb2r7jmmj.apps.googleusercontent.com")
-        .build()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -195,12 +183,6 @@ fun mainStage(
     androidAlarmScheduler: AndroidAlarmScheduler
 ) {
 
-    val userName = remember {
-        mutableStateOf("")
-    }
-    val userAvatar = remember {
-        mutableStateOf("")
-    }
 
     val visible = remember {
         mutableStateOf(false)
@@ -336,10 +318,7 @@ fun AccountNavigator(
         composable("login") {
             Login(navController, login, googleAuthUiClient )
         }
-        //composable("forget") { forgetPage(navController) }
         composable("forgetOne") { ForgetPageOne(navController, login) }
-//        composable("forgetTwo") { ForgetPageTwo(navController, login) }
-//        composable("forgetThree") { ForgetPageThree(navController, login) }
         composable("registrationOne") { RegistrationPageOne(navController) }
         composable("registrationTwo") { RegistrationPageTwo(navController) }
     }
@@ -357,7 +336,6 @@ fun ScaffoldExample(
     androidAlarmScheduler: AndroidAlarmScheduler
 ) {
     val currentDate = LocalDate.now()
-    var presses by remember { mutableIntStateOf(0) }
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Today", "Scheduled", "Done", "Location", "Account")
     val account : ComposableFun = { Icon(Icons.Default.Home, contentDescription = "Account") }
@@ -376,9 +354,6 @@ fun ScaffoldExample(
     }
 
 
-    var barContent by remember {
-        mutableStateOf("TodoList")
-    }
 
 
     val coroutineScope = rememberCoroutineScope()

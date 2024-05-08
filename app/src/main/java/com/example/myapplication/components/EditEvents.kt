@@ -1,7 +1,6 @@
 package com.example.myapplication.components
 
 import android.Manifest
-import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
@@ -46,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import com.example.myapplication.ApiClient
-import com.example.myapplication.Pages.userEmail
 import com.example.myapplication.Pages.userId
 import com.example.myapplication.entities.BusinessEntity
 import com.example.myapplication.entities.TodoItem
@@ -54,8 +52,6 @@ import com.example.myapplication.util.FirebaseUtil.updateTodoItemInFirebase
 import com.example.myapplication.viewmodel.TodoItemViewModel
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import org.json.JSONObject
@@ -131,9 +127,6 @@ fun EditEvents(
         mutableStateOf(-1.0)
     }
 
-    var isDone by remember {
-        mutableStateOf(false)
-    }
 
     val currentDate = LocalDate.now()
     val formatter = DateTimeFormatter.ISO_DATE
@@ -238,9 +231,7 @@ fun EditEvents(
 
 
                         fusedLocationProviderClient.getLastLocation()
-                        //val lat = result.latitude
-                        //val long=result.longitude
-                        //Log.d("locationcurrent", "" + lat + " " + long)
+
 
                         DockedSearchBar(
                             query = searchLocation,
@@ -275,14 +266,6 @@ fun EditEvents(
                                                             val formattedAddress = address.getString("description")
                                                             val placeId = address.getString("place_id")
 
-//                                                                val latitude =
-//                                                                    address.getJSONObject("geometry")
-//                                                                        .getJSONObject("location")
-//                                                                        .getDouble("lat")
-//                                                                val longitude = address.getJSONObject("geometry")
-//                                                                    .getJSONObject("location")
-//                                                                    .getDouble("lng")
-                                                            //Log.d("details", "onResponse: " + fullName + latitude + longitude)
                                                             resultset.add(BusinessEntity(formattedAddress, 0.0, 0.0, placeId))
                                                         }
                                                         if (!activeSuggestion) {

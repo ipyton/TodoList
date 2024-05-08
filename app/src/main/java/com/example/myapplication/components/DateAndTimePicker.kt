@@ -3,7 +3,6 @@ package com.example.myapplication.components
 import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
