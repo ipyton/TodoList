@@ -341,10 +341,12 @@ fun Login(
                                 try {
                                     request = GetCredentialRequest.Builder()
                                         .addCredentialOption(getGoogleIdOption.setFilterByAuthorizedAccounts(false).build()).build()
-                                    credentialManager.getCredential(
+                                    val result1 = credentialManager.getCredential(
                                         request = request,
                                         context = current,
                                     )
+                                    handleSignIn(result1, auth,login)
+
                                 } catch(e:NoCredentialException) {
                                     val barResult = snackbarHostState
                                         .showSnackbar(
