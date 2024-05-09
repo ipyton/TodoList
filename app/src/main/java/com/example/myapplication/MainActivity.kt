@@ -156,6 +156,59 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     )
+                    val networkCallback = object : ConnectivityManager.NetworkCallback() {
+                        // network is available for use
+                        override fun onAvailable(network: Network) {
+                            super.onAvailable(network)
+                            Toast.makeText(
+                                context,
+                                "You are available now.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+
+                        // Network capabilities have changed for the network
+                        override fun onCapabilitiesChanged(
+                            network: Network,
+                            networkCapabilities: NetworkCapabilities
+                        ) {
+                            super.onCapabilitiesChanged(network, networkCapabilities)
+                            val unmetered = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+                        }
+
+                        // lost network connection
+                        override fun onLost(network: Network) {
+                            super.onLost(network)
+                            Toast.makeText(
+                                context,
+                                "You are offline now.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+
+                        }
+                    }
+                    val networkRequest = NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                        .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                        .build()
+
+                    val permissionRequest = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()) {
+                            permissions -> run {
+                        var connectivityManager = context.getSystemService(ConnectivityManager::class.java) as ConnectivityManager
+                        connectivityManager.requestNetwork(networkRequest, networkCallback)
+
+                    }
+                    }
+
+
+                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED ||
+                        ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
+                        permissionRequest.launch(arrayOf(
+                            Manifest.permission.CHANGE_NETWORK_STATE,
+                            Manifest.permission.WRITE_SETTINGS))
+                    }
+
 
                     mainStage(loginState, launcher, googleAuthUiClient,androidAlarmScheduler)
                 }
@@ -172,60 +225,7 @@ fun mainStage(
     googleAuthUiClient: GoogleAuthUIClient,
     androidAlarmScheduler: AndroidAlarmScheduler
 ) {
-    val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        // network is available for use
-        override fun onAvailable(network: Network) {
-            super.onAvailable(network)
-            Toast.makeText(
-                context,
-                "You are available now.",
-                Toast.LENGTH_SHORT,
-            ).show()
-        }
 
-        // Network capabilities have changed for the network
-        override fun onCapabilitiesChanged(
-            network: Network,
-            networkCapabilities: NetworkCapabilities
-        ) {
-            super.onCapabilitiesChanged(network, networkCapabilities)
-            val unmetered = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-        }
-
-        // lost network connection
-        override fun onLost(network: Network) {
-            super.onLost(network)
-            Toast.makeText(
-                context,
-                "You are offline now.",
-                Toast.LENGTH_SHORT,
-            ).show()
-
-        }
-    }
-    val networkRequest = NetworkRequest.Builder()
-        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-        .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-        .build()
-
-    val permissionRequest = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()) {
-            permissions -> run {
-        var connectivityManager = context.getSystemService(ConnectivityManager::class.java) as ConnectivityManager
-        connectivityManager.requestNetwork(networkRequest, networkCallback)
-
-    }
-    }
-
-
-    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED ||
-        ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-        SideEffect {
-            permissionRequest.launch(arrayOf(
-                Manifest.permission.CHANGE_NETWORK_STATE,
-                Manifest.permission.WRITE_SETTINGS))
-        }
-    }
 
     val visible = remember {
         mutableStateOf(false)
