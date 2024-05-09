@@ -542,7 +542,6 @@ fun AddEvents(
 
 
                                 viewModel.fetchAndGroupTodoItems()
-
                                 showAddEvent.value = false
                                       },
                             modifier = Modifier.padding(8.dp),
