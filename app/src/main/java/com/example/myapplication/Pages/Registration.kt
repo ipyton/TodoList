@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -47,6 +50,8 @@ fun RegistrationPageOne(navController: NavHostController)
     val regex = Regex("[a-zA-Z0-9._%+-]+@gmail\\.com")
     val regexPassword = Regex("\\S{6,}")
     val context = LocalContext.current
+    var passwordVisibility by remember { mutableStateOf(false) }
+
 
     Column (modifier = Modifier
         .fillMaxWidth()
@@ -75,23 +80,34 @@ fun RegistrationPageOne(navController: NavHostController)
                 .fillMaxWidth()
                 .padding(8.dp))
 
-        OutlinedTextField(value = password,
+        OutlinedTextField(
+            value = password,
             onValueChange = { password = it },
             label = { Text(text = "Password") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp))
+                .padding(8.dp)
+        )
 
-        OutlinedTextField(value = confirmPassword,
+        OutlinedTextField(
+            value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = { Text(text = "Confirm password") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp))
+                .padding(8.dp)
+        )
+
+        TextButton(
+            onClick = { passwordVisibility = !passwordVisibility },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = if (passwordVisibility) "Hide password" else "Show password")
+        }
 
         Button(onClick = {
             if (email.isEmpty() && password.isEmpty())

@@ -55,6 +55,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -228,16 +229,25 @@ fun Login(
                 )
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                var passwordVisibility by remember { mutableStateOf(false) }
 
                 TextField(
                     value = surname,
                     onValueChange = { surname = it },
-                    label = { Text("Password") },
-                    visualTransformation = PasswordVisualTransformation(),
+                    label = { Text("password") },
+                    visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier
                         .width(300.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    trailingIcon = {
+                        TextButton(
+                            onClick = { passwordVisibility = !passwordVisibility },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text(if (passwordVisibility) "hide" else "show")
+                        }
+                    }
                 )
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
