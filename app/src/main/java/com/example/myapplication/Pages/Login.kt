@@ -283,10 +283,19 @@ fun Login(
                                     val email = user?.email
                                     if (email != null) {
                                         userEmail = email
-
                                     }
                                     Log.d(userEmail, "userEmail:${userEmail}")
-                                    login.value = true
+                                    if (user != null) {
+                                        if(user.isEmailVerified)
+                                            login.value = true
+                                        else {
+                                            Toast.makeText(
+                                                context,
+                                                "Please verify your email first.",
+                                                Toast.LENGTH_SHORT,
+                                            ).show()
+                                        }
+                                    }
                                     user?.email?.let { userEmail ->
                                         com.google.firebase.Firebase.firestore.collection("users")
                                             .document(user.uid)
