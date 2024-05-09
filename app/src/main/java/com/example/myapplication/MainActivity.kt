@@ -2,7 +2,6 @@ package com.example.myapplication
 
 
 import android.Manifest
-import android.app.Application
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,12 +9,10 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 
 import android.content.pm.PackageManager
-import android.graphics.Matrix
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.opengl.ETC1
 
 import android.os.Build
 import android.os.Bundle
@@ -71,13 +68,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 
 import androidx.compose.runtime.SideEffect
 
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
-import androidx.core.content.getSystemService
 
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -103,7 +94,6 @@ import com.example.myapplication.util.FirebaseUtil.markSelectedTodoItemsAsDone
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.example.myapplication.viewmodel.TodoListViewModel
 import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -248,10 +238,18 @@ fun mainStage(
                 Manifest.permission.WRITE_SETTINGS))
         }
     }
-
-    return if (loginState.value ) {
-        ScaffoldExample(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
+     if (loginState.value && Firebase.auth.currentUser?.isEmailVerified == true) {
+        return Scaffold(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
     }
+    else if (loginState.value && Firebase.auth.currentUser?.isEmailVerified == false) {
+         AccountPage(login = loginState, googleAuthUiClient)
+         Toast.makeText(
+             context,
+             "You need to verify your email address.",
+             Toast.LENGTH_SHORT,
+         ).show()
+
+     }
     else{
         AccountPage(login = loginState, googleAuthUiClient)
     }
@@ -329,7 +327,7 @@ fun AccountNavigator(
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScaffoldExample(
+fun Scaffold(
     login: MutableState<Boolean>,
     isVisible: MutableState<Boolean>,
     googleAuthUiClient: GoogleAuthUIClient,
@@ -448,8 +446,7 @@ fun ScaffoldExample(
             if (showEventAdder.value) {
                 AddEvents(showEventAdder, todoListViewModel, scheduler = androidAlarmScheduler)
             }
-            MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient,todoListViewModel = todoListViewModel
-            ,androidAlarmScheduler)
+            MyNavigator(navController = navController, login = login, isVisible = isVisible,googleAuthUiClient,todoListViewModel = todoListViewModel,androidAlarmScheduler)
         }
     }
 }
