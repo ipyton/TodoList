@@ -172,17 +172,6 @@ fun mainStage(
     googleAuthUiClient: GoogleAuthUIClient,
     androidAlarmScheduler: AndroidAlarmScheduler
 ) {
-
-
-    val visible = remember {
-        mutableStateOf(false)
-    }
-    if(Firebase.auth.currentUser!=null) {
-        loginState.value = true
-    } else {
-        loginState.value = false
-    }
-
     val networkCallback = object : ConnectivityManager.NetworkCallback() {
         // network is available for use
         override fun onAvailable(network: Network) {
@@ -222,12 +211,11 @@ fun mainStage(
 
     val permissionRequest = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions()) {
             permissions -> run {
-                    var connectivityManager = context.getSystemService(ConnectivityManager::class.java) as ConnectivityManager
-                    connectivityManager.requestNetwork(networkRequest, networkCallback)
+        var connectivityManager = context.getSystemService(ConnectivityManager::class.java) as ConnectivityManager
+        connectivityManager.requestNetwork(networkRequest, networkCallback)
 
-            }
     }
-
+    }
 
 
     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED ||
@@ -238,16 +226,18 @@ fun mainStage(
                 Manifest.permission.WRITE_SETTINGS))
         }
     }
-     if (loginState.value && Firebase.auth.currentUser?.isEmailVerified == true) {
-        return Scaffold(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
+
+    val visible = remember {
+        mutableStateOf(false)
     }
-    else if (loginState.value && Firebase.auth.currentUser?.isEmailVerified == false) {
-         AccountPage(login = loginState, googleAuthUiClient)
-         Toast.makeText(
-             context,
-             "You need to verify your email address.",
-             Toast.LENGTH_SHORT,
-         ).show()
+    if(Firebase.auth.currentUser!=null) {
+        loginState.value = true
+    } else {
+        loginState.value = false
+    }
+
+     if (loginState.value) {
+         Scaffold(login = loginState, isVisible = visible, googleAuthUiClient,androidAlarmScheduler)
 
      }
     else{

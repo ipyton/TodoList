@@ -67,6 +67,7 @@ import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.navigation.NavHostController
+import com.example.myapplication.MainApplication
 import com.example.myapplication.R
 import com.example.myapplication.util.GoogleAuthUIClient
 import com.google.firebase.auth.auth
@@ -273,21 +274,34 @@ fun Login(
                                     val email = user?.email
                                     if (email != null) {
                                         userEmail = email
-
                                     }
                                     Log.d(userEmail, "userEmail:${userEmail}")
-                                    login.value = true
-                                    user?.email?.let { userEmail ->
-                                        com.google.firebase.Firebase.firestore.collection("users")
-                                            .document(user.uid)
-                                            .set(mapOf("email" to userEmail))
-                                            .addOnSuccessListener {
-                                                Log.d(TAG, "DocumentSnapshot successfully written!")
+                                    if (user != null) {
+                                        if (user.isEmailVerified) {
+                                            login.value = true
+                                            user.email?.let { userEmail ->
+                                                com.google.firebase.Firebase.firestore.collection("users")
+                                                    .document(user.uid)
+                                                    .set(mapOf("email" to userEmail))
+                                                    .addOnSuccessListener {
+                                                        Log.d(TAG, "DocumentSnapshot successfully written!")
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        Log.w(TAG, "Error writing document", e)
+                                                    }
                                             }
-                                            .addOnFailureListener { e ->
-                                                Log.w(TAG, "Error writing document", e)
-                                            }
+
+
+                                        } else {
+                                            Toast.makeText(
+                                                MainApplication.context,
+                                                "You need to verify your email address.",
+                                                Toast.LENGTH_SHORT,
+                                            ).show()
+                                        }
                                     }
+
+
                                 } else {
                                     Log.w(TAG, "signInWithEmail:failure", task.exception)
                                     Toast.makeText(
