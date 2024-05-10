@@ -204,9 +204,11 @@ class MainActivity : ComponentActivity() {
 
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED ||
                         ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-                        permissionRequest.launch(arrayOf(
-                            Manifest.permission.CHANGE_NETWORK_STATE,
-                            Manifest.permission.WRITE_SETTINGS))
+                        SideEffect {
+                            permissionRequest.launch(arrayOf(
+                                Manifest.permission.CHANGE_NETWORK_STATE,
+                                Manifest.permission.WRITE_SETTINGS))
+                        }
                     }
 
 

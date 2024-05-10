@@ -79,6 +79,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import androidx.compose.ui.text.input.VisualTransformation
+
 
 
 var userEmail:String = ""
@@ -229,18 +231,23 @@ fun Login(
                 )
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-
+                var passwordVisibility by remember { mutableStateOf(false) }
                 TextField(
                     value = surname,
                     onValueChange = { surname = it },
                     label = { Text("Password") },
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier
                         .width(300.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
+                    shape = RoundedCornerShape(12.dp),trailingIcon = {
+                        TextButton(
+                            onClick = { passwordVisibility = !passwordVisibility },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ){
+                        Text(if (passwordVisibility) "hide" else "show")
+                        }
+            })}
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(
                     onClick = { navController.navigate("forgetOne") },
@@ -429,6 +436,7 @@ fun Login(
 
             }
         }
+
 
 
 

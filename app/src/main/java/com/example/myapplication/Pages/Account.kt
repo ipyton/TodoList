@@ -46,11 +46,11 @@ fun isMissed(date:String, time:String):Boolean{
     return if ( calendar.before(todoCalendar) ) {
         println("missed")
         println(todoCalendar.toString() )
-        true
+        false
     } else {
         println("done")
         println(todoCalendar.toString())
-        false
+        true
     }
 
 }

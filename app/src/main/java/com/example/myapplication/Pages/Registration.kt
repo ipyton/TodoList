@@ -1,6 +1,9 @@
 package com.example.myapplication.Pages
 
 import android.app.Activity
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.LineHeightStyle
 import android.content.ContentValues.TAG
 import android.util.Log
 import android.widget.Toast
@@ -47,7 +50,7 @@ fun RegistrationPageOne(navController: NavHostController)
     val regex = Regex("[a-zA-Z0-9._%+-]+@gmail\\.com")
     val regexPassword = Regex("\\S{6,}")
     val context = LocalContext.current
-
+    var passwordVisibility by remember { mutableStateOf(false) }
     Column (modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp))
@@ -78,7 +81,7 @@ fun RegistrationPageOne(navController: NavHostController)
         OutlinedTextField(value = password,
             onValueChange = { password = it },
             label = { Text(text = "Password") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,11 +90,17 @@ fun RegistrationPageOne(navController: NavHostController)
         OutlinedTextField(value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = { Text(text = "Confirm password") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp))
+        TextButton(
+            onClick = { passwordVisibility = !passwordVisibility },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = if (passwordVisibility) "Hide password" else "Show password")
+        }
 
         Button(onClick = {
             if (email.isEmpty() && password.isEmpty())
@@ -140,6 +149,11 @@ fun RegistrationPageOne(navController: NavHostController)
                                 {
                                     Log.d(TAG, "createUserWithEmail:success")
                                     navController.navigate("registrationTwo")
+                                    Toast.makeText(
+                                        context,
+                                        "Email has been sent,please verify!",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                                 }
                             }
 
